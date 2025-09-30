@@ -1,0 +1,58 @@
+# ===================================================================
+# Arquivo .gitignore para projetos LaTeX
+# ===================================================================
+
+# PRODUTO FINAL
+# Ignoramos o PDF final. Ele é um produto da compilação, não um arquivo-fonte.
+# Isso mantém o repositório leve e evita conflitos de merge.
+*.pdf
+
+
+# ARQUIVOS AUXILIARES DE COMPILAÇÃO
+# Gerados pelo LaTeX para referências cruzadas, sumários, etc.
+*.aux
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.nav
+*.snm
+
+
+# ARQUIVOS DE BIBLIOGRAFIA GERADOS
+# O arquivo .bib é o fonte. Estes são os arquivos gerados pelo Biber/BibTeX.
+*.bbl
+*.bcf
+*.blg
+*-blx.bib
+
+
+# ARQUIVOS DE LOG E FERRAMENTAS DE BUILD
+# Arquivos de diagnóstico e controle da compilação.
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.xdv
+
+
+# ARQUIVOS DE RASCUNHO E BACKUP DO EDITOR
+# Alguns editores criam arquivos de backup automático.
+*~
+*.bak
+*.tmp
+
+
+# DIRETÓRIOS DE CONFIGURAÇÃO DO EDITOR
+# Configurações locais do VS Code não devem ir para o repositório.
+.vscode/
+
+# Arquivos de configuração de IDEs (JetBrains TeXify)
+*.run.xml
