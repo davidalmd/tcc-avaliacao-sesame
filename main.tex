@@ -1,20 +1,21 @@
 \documentclass[12pt]{article}
 \usepackage{ArtigoIFPE}
 
-\title{COMO PREPARAR UM ARTIGO CIENTÍFICO (EM CAIXA ALTA): subtítulo do trabalho se houver (em caixa baixa)}
-\titleEng{TÍTULO EM INGLÊS (OPCIONAL, CAIXA ALTA): subtítulo (caixa baixa)}
 
-\autora{Nome do autor 1}
-\emaila{Email do autor 1}
+\title{AVALIANDO O MERGE SEMI-ESTRUTURADO: \\ um estudo comparativo de corretude e desempenho \\ da ferramenta SESAME}
+\titleEng{EVALUATING SEMISTRUCTURED MERGE: a comparative evaluation of the SESAME tool}
+
+\autora{David Lucas Alves de Almeida}
+\emaila{dlaa@discente.ifpe.edu.br}
 %\autorb{Nome do autor 2}
 %\emailb{Email do autor 2}
 % Aceita até 6 autores (autora, autorb, autorc, ... , autorf) e seus emails
-\orientador{Orientador}
-\emailOrientador{Email do orientador}
+\orientador{Guilherme José de Carvalho Cavalcanti}
+\emailOrientador{guilherme.cavalcanti@belojardim.ifpe.edu.br}
 
-\campus{Pesqueira}
-\curso{de Bacharelado em Engenharia Elétrica}
-\data{07 de março de 2024}
+\campus{Belo Jardim}
+\curso{de Bacharelado em Engenharia de Software}
+\data{18 de novembro de 2025}
 
 \begin{document}
 
@@ -24,184 +25,130 @@
 
 \section*{Resumo}
 
-\noindent O resumo é um elemento obrigatório apresentado em um único parágrafo. Indica os principais assuntos abordados, apresentando o(s) objetivo(s), o método, os resultados e as considerações finais sem citação bibliográfica ou abreviação não definida. Na sua extensão deve conter no mínimo 100 e no máximo 250 palavras. Segundo a norma da Associação Brasileira de Normas Técnicas (ABNT) NBR 6028 (2003, seção 3.3.4) ``devem-se evitar símbolos e contrações que não sejam de uso corrente'' como também ``fórmulas, equações, diagramas etc., que não sejam absolutamente necessários; quando seu emprego for imprescindível, defini-los na primeira vez que aparecerem''. 
+    \noindent Fazer o resumo após terminar toda a escrita. 
 
-\palavraschave{Palavra 1. Palavra 2. Palavra 3.}
+\palavraschave{Merge Semi-Estruturado. Ferramentas de Merge. Conflitos de Merge. Avaliação de Desempenho. Corretude de Software.}
 
 \section*{Abstract}
 
-\noindent Modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo modelo.
+    \noindent Write the summary after finishing all the writing.
 
-\keywords{Palavra 1. Palavra 2. Palavra 3.}
+\keywords{Semistructured Merge. Merge Tools. Merge Conflicts. Performance Evaluation. Merge Correctness.}
 
 \vspace*{20pt} \hrule height 1.5pt
 
 \section{Introdução}
 
-Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste. Exemplo de citação textual, conforme \textcite{world2023}, e exemplo de citação direta curta encerrando parágrafo \parencite{world2023}.
-% No arquivo compilado, fica uma marcação em verde indicando que é um link. Mas não se preocupe, pois, quando baixa o PDF, as marcações somem.
+    O desenvolvimento de software moderno é um processo inerentemente colaborativo, onde equipas trabalham simultaneamente em diferentes partes de um mesmo projeto. Para coordenar essas contribuições, Sistemas de Controlo de Versão (VCS), como o Git, são indispensáveis. No entanto, a operação de merge, que é o mecanismo central para integrar o trabalho de diferentes desenvolvedores, permanece um desafio crítico e um conhecido problema na engenharia de software.
 
-Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste.
+    As ferramentas de merge tradicionais, ditas não estruturadas (ou textuais), tratam o código como simples sequências de linhas. Embora sejam rápidas e universais, elas carecem de compreensão sintática, o que frequentemente resulta em "conflitos espúrios" em mudanças que são, na verdade, semanticamente independentes, conforme \textcite{cavalcanti2024semistructured}. No outro extremo, ferramentas estruturadas analisam a árvore sintática do código (AST) para evitar esses conflitos, mas à custa de maior complexidade e especificidade para cada linguagem. \parencite{schesch2024evaluation} Neste cenário, surge uma terceira via: o merge semi-estruturado. Esta abordagem procura um equilíbrio, analisando estruturas de alto nível (como classes e métodos) e tratando o resto como texto. A ferramenta SESAME insere-se nesta categoria, propondo uma técnica inovadora que utiliza separadores sintáticos para refinar a resolução de conflitos sem a complexidade de uma análise sintática completa.
+    
+    Contudo, a eficácia destas ferramentas tem sido difícil de medir. Historicamente, a avaliação de ferramentas de merge tem sido limitada por metodologias que não distinguem adequadamente um merge correto de um incorreto. Como demonstrado no estudo recente de \textcite{schesch2024evaluation}, intitulado "Evaluation of Version Control Merge Tools", muitos estudos anteriores focaram-se apenas na contagem de conflitos reportados. Esta métrica é enganadora: uma ferramenta pode ser "silenciosa" (não reportar conflitos), mas gerar um código fundido incorretamente, introduzindo erros de compilação ou bugs sutis no comportamento do programa. O autor argumentam que um merge incorreto é significativamente mais custoso para o ciclo de desenvolvimento do que um conflito explícito, pois exige depuração posterior. Este trabalho propõe-se a preencher uma lacuna na literatura ao avaliar empiricamente a ferramenta SESAME sob uma ótica de rigor metodológico que faltou às suas avaliações preliminares.
 
-Utilize o ambiente \textit{citacao} para incluir citações com mais de três linhas.
+    Para tal, este estudo configura-se como uma replicação diferenciada (differentiated replication) do trabalho de \textcite{schesch2024evaluation}. A replicação de estudos experimentais é um pilar fundamental para o amadurecimento da engenharia de software como ciência, permitindo verificar a generalização de resultados e validar novas tecnologias em benchmarks estabelecidos. Enquanto o estudo original de \textcite{schesch2024evaluation} avaliou ferramentas como Git Merge, Spork e IntelliMerge, este trabalho estende a sua infraestrutura experimental para incluir e avaliar o SESAME. A avaliação não se baseará apenas na contagem de conflitos, mas utilizará a execução de suítes de testes automatizados em milhares de cenários de merge reais (extraídos de projetos open-source) como um proxy para verificar a corretude do código resultante.
 
-\begin{citacao}
-Exemplo de citação com mais de três linhas. Exemplo de citação com mais de três linhas. Exemplo de citação com mais de três linhas. Exemplo de citação com mais de três linhas. Exemplo de citação com mais de três linhas. Exemplo de citação com mais de três linhas. Exemplo de citação com mais de três linhas. 
-\end{citacao}
+    O objetivo principal é determinar a eficácia do SESAME em termos de correção, desempenho e redução de esforço, posicionando-o comparativamente face ao estado da arte. Especificamente, este estudo pretende responder: onde se situa o SESAME no compromisso entre reduzir conflitos textuais e evitar a introdução de erros silenciosos.
 
-Um exemplo para equação ou fórmula pode ser visto a seguir.
-\begin{equation} \label{eu_eqn}
-e^{\pi i} + 1 = 0
-\end{equation}
+\section{Fundamentação Teórica}
+    Esta seção apresenta os conceitos fundamentais sobre controle de versão, as diferentes abordagens para fusão de código (merge) e as metodologias para avaliação da eficácia dessas abordagens. A operação de merge é o processo pelo qual as contribuições de diferentes linhas de desenvolvimento são integradas.
+    
+      \subsection{Versionamento de Software e o Desafio do Merge}
+      O desenvolvimento de software moderno é uma atividade eminentemente colaborativa, na qual múltiplos desenvolvedores trabalham em paralelo. Para gerenciar essa complexidade, os Sistemas de Controle de Versão (VCS) são ferramentas indispensáveis. A operação de merge é o processo pelo qual as contribuições de diferentes linhas de desenvolvimento são integradas. Os estudos de \parencite{Mens2002} sobre o tema mostram que a fusão de software é reconhecida como uma área de pesquisa complexa e desafiadora.
+    
+      O processo de fusão mais comum é o three-way merge (fusão de três vias), que utiliza três versões de um arquivo para calcular o resultado final: a versão base (o ancestral comum mais próximo), e as duas versões modificadas, left e right (ou local e remota). O objetivo de uma ferramenta de merge é integrar as alterações de forma automática. Quando isso não é possível, a ferramenta reporta um conflito, que exige intervenção manual do desenvolvedor.
+    
+      \subsection{O Espectro das Ferramentas de Merge}
+      As ferramentas de merge podem ser classificadas em um espectro de abordagens, que variam em complexidade, precisão e custo computacional.
+    
+      \subsubsection{Merge Não Estruturado (Textual)}
+      A abordagem mais tradicional e amplamente utilizada, presente em ferramentas como o git merge padrão, é o merge não estruturado. Essa técnica trata os arquivos de código-fonte como simples sequências de linhas de texto, utilizando algoritmos como o diff3 para identificar e mesclar as diferenças %\cite{Khanna2007}.
+      \begin{itemize}
+      \item \textbf{Vantagens:} São rápidas, consomem poucos recursos e são agnósticas à linguagem de programação, podendo ser aplicadas a qualquer tipo de arquivo de texto.
+      \item \textbf{Desvantagens:} Sua principal fraqueza é a falta de compreensão sobre a estrutura sintática do código. Isso leva à geração de conflitos espúrios (falsos positivos), por exemplo, quando dois desenvolvedores adicionam métodos diferentes na mesma região do arquivo. Além disso, podem falhar em detectar conflitos semânticos reais (falsos negativos), resultando em merges que parecem limpos, mas que quebram a compilação ou o comportamento do programa.
+      \end{itemize}
+    
+      \subsubsection{Merge Estruturado}
+      Para superar as limitações do merge textual, pes\-qui\-sa\-do\-res de\-sen\-vol\-ve\-ram o mer\-ge estruturado, que analisa a estrutura sintática do código-fonte. Ferramentas como o Spork baseiam-se em correspondência de nós em árvores AST, enquanto o IntelliMerge  utiliza grafos de elementos de programa. Ambas buscam precisão máxima, mas sofrem com o overhead de desempenho e complexidade de implementação.
+      \begin{itemize}
+      \item \textbf{Vantagens:} Ao compreender a estrutura do programa, podem resolver conflitos que confundem as ferramentas textuais, como a reordenação de declarações de métodos ou campos. Isso resulta em uma maior precisão e na redução de conflitos espúrios.
+      \item \textbf{Desvantagens:} São inerentemente específicas para cada linguagem, exigindo um esforço significativo de implementação para cada nova linguagem suportada. Além disso, a análise e a fusão de ASTs completas podem ser computacionalmente caras, especialmente em arquivos grandes. Exemplos notáveis de ferramentas estruturadas incluem JDime, Spork e Mastery.
+      \end{itemize}
+    
+      \subsubsection{Merge Semi-Estruturado}
+      Buscando um ponto de equilíbrio, a abordagem semi-estruturada foi proposta como um híbrido entre as duas anteriores. Ferramentas semi-estruturadas, como a FSTMerge, analisam apenas as estruturas de alto nível do código (como declarações de classes, métodos e campos), representando-as em uma AST parcial. As estruturas de baixo nível, como corpos de métodos e expressões, são tratadas como texto plano e mescladas com o auxílio de uma ferramenta não estruturada \parencite{Apel2011}.
+      
+      Embora essa abordagem reduza a complexidade e o custo com\-pu\-ta\-ci\-o\-nal do mer\-ge estru\-tu\-ra\-do, ela herda parte das imprecisões do merge textual ao lidar com as estruturas de baixo nível.
+    
+      \subsubsection{A Abordagem Inovadora do SESAME}
+      Dentro da categoria semi-estruturada, a ferramenta SESAME, proposta por \textcite{cavalcanti2024semistructured}, introduz uma técnica inovadora. Em vez de se basear em uma AST parcial, a SESAME infere a estrutura do código alavancando separadores sintáticos específicos da linguagem (como {, }, (, ), ; em Java). A ferramenta pré-processa as versões do código, inserindo quebras de linha antes e depois de cada separador. Isso faz com que blocos de código que antes estavam na mesma linha (por exemplo, a condição e o corpo de um if) passem a ocupar linhas distintas e não-consecutivas. Em seguida, um algoritmo de merge não estruturado é invocado sobre o código pré-processado, sendo capaz de resolver muitos conflitos que a abordagem semi-estruturada tradicional não conseguiria.
+    
+    \subsection{O Desafio de Avaliar Ferramentas de Merge}
+      Tão importante quanto desenvolver novas ferramentas é a capacidade de avaliá-las de forma justa e realista. Enquanto o desenvolvimento do SESAME foca na eficiência da resolução de conflitos, a sua validação necessita de um critério de aceitação mais rigoroso do que a mera contagem de linhas. Adota-se, portanto, a perspectiva de \textcite{schesch2024evaluation}, que prioriza a integridade semântica do software resultante.
+      
+      Conforme apontado por \textcite{schesch2024evaluation}, a literatura anterior sofre com metodologias que apresentam falhas significativas, listadas a seguir:
+      \begin{enumerate}
+          \item \textbf{Falta de Distinção da Correção:} A maioria das avaliações existentes mede o sucesso de uma ferramenta apenas pela sua capacidade de produzir um merge limpo (sem conflitos), tratando todos os merges limpos como igualmente bem-sucedidos. No entanto, um merge limpo pode ser incorreto, ou seja, pode introduzir um erro de compilação ou um defeito de comportamento que só será detectado posteriormente.
+          \item \textbf{Dados Pouco Representativos:} Muitas avaliações utilizam cenários de merge sintéticos ou coletados apenas do branch principal dos repositórios, o que não reflete a variedade e a complexidade das fusões que ocorrem em branches de desenvolvimento, que são frequentemente deletados após o merge.
+          \item \textbf{"Verdade Fundamental" Questionável:} Alguns estudos comparam o resultado da ferramenta com a versão final do código commitada pelo desenvolvedor. Contudo, se o próprio desenvolvedor utilizou uma ferramenta de merge imperfeita para gerar essa versão, o estudo pode acabar penalizando uma ferramenta mais correta.
+      \end{enumerate}
+    
+      Para superar essas limitações, uma metodologia de avaliação mais rigorosa foi proposta. Ela se baseia na execução de suítes de teste automatizadas como um proxy para a verificação da correção do merge. Assim, um merge limpo é classificado como correto se todos os testes passarem, e incorreto se algum teste falhar. Adicionalmente, a metodologia introduz uma métrica de "Redução de Esforço", que leva em conta o custo relativo (k) de um merge incorreto, partindo da premissa de que consertar um bug silencioso é significativamente mais caro do que resolver um conflito de merge explícito.
+    
+      \subsection{Replicação na Engenharia de Software}
+      A replicação é um componente essencial do método científico, permitindo que a comunidade verifique se resultados empíricos são consistentes e generalizáveis para além do contexto de um único estudo. Segundo \textcite{carver2014replications}, a replicação pode ser definida como a repetição deliberada de um estudo empírico com o objetivo de determinar se os resultados originais podem ser reproduzidos. Sem a replicação, observações isoladas podem ser fruto do acaso ou de condições específicas irreprodutíveis, impedindo a consolidação do conhecimento na área.
 
-Se forem várias linhas \footnote{Mais informações sobre alinhamento de equações: \url{https://www.overleaf.com/learn/latex/Aligning_equations_with_amsmath}}:
-\begin{equation}
-\label{eq1}
-\begin{split}
-A & = \frac{\pi r^2}{2} \\
- & = \frac{1}{2} \pi r^2
-\end{split}
-\end{equation}
+      Na Engenharia de Software, as replicações podem ser classificadas em diferentes tipos, dependendo do grau de fidelidade ao estudo original. \textcite{shull2008role} distinguem entre replicações exatas, onde se busca seguir os procedimentos originais o mais fielmente possível, e replicações conceituais, que buscam responder à mesma questão de pesquisa utilizando métodos diferentes . \textcite{mantyla2010rethinking} expandem essa visão, discutindo as replicações diferenciadas, onde variações deliberadas são introduzidas nas variáveis do experimento, como a alteração da população estudada ou das ferramentas avaliadas, para testar a robustez das teorias.
 
+      Este trabalho classifica-se como uma replicação diferenciada do estudo conduzido por \textcite{schesch2024evaluation}. Adota-se, de forma rigorosa, a mesma infraestrutura experimental, bem como as mesmas métricas de avaliação (correção via suítes de teste) e critérios de sucesso do estudo original. A diferenciação principal reside na introdução de uma nova variável independente: a ferramenta de \textit{merge} SESAME. Desta forma, o estudo não apenas valida a metodologia proposta por \textcite{schesch2024evaluation}, mas também estende o corpo de conhecimento ao avaliar o comportamento de uma nova abordagem semi-estruturada frente aos \textit{baselines} da literatura.
 
-
-Ilustrações: Qualquer que seja o tipo de ilustração, esta deve ser precedida de sua palavra designativa (neste arquivo estão definidos os ambientes: \textit{figura}, \textit{diagrama}, \textit{fluxograma}, \textit{quadro}, \textit{tabela}, \textit{grafico} e \textit{mapa}). Imediatamente após a ilustração, deve-se indicar a fonte consultada (elemento obrigatório, mesmo que seja produção do próprio autor) conforme a ABNT NBR 10520, legenda, notas e outras informações necessárias à sua compreensão (se houver). A ilustração deve ser citada no texto e inserida o mais próximo possível do trecho a que se refere. A citação pode ser utilizando o comando \textit{autoref}, ex.: conforme pode ser visto no \autoref{dia:VSGDSC}.
-
-\begin{diagrama}
-    \caption{Blocos do VS-GDSC.}
-    \centering
-    \includegraphics[width=0.8\linewidth]{Imagens/diagramaBlocos.eps}\\
-    \XPT Fonte: \textcite{batista2015}
-    \label{dia:VSGDSC}
-\end{diagrama}
-
-Tabelas: Devem ser citadas no texto, inseridas o mais próximo possível do trecho a que se referem, e padronizadas conforme as Normas de apresentação tabular do IBGE. Um exemplo pode ser visto na \autoref{tab:Residentes}. Deve-se indicar a fonte consultada (elemento obrigatório, mesmo que seja produção do próprio autor), de acordo com a ABNT NBR 10520.
-
-\begin{tabela}[hbt]
-    \caption{Pessoas residentes em domicílios particulares, por sexo e situação do domicílio - Brasil - 1980}
-    \centering
-    \vspace{-6pt} % Este comando aproxima ou afasta os "floats" dos textos. Neste caso, estamos aproximando a Legenda da Tabela
-    \begin{tabular}{lccc}
-    \specialrule{2pt}{0pt}{1pt}
-    Situação do Total & Total & Mulheres & Homens \\
-    \specialrule{1pt}{1pt}{1pt}
-    Total & 117.960.301 & 59.595.332 & 58.364.969\\
-    Urbana & 79.972.931 & 41.115.439 & 38.857.492 \\
-    Rural & 37.987.370 & 18.479.893 & 19.507.477 \\
-    \specialrule{2pt}{1pt}{0pt}
-    \end{tabular}\\
-    \vspace{3pt}
-    \XPT Fonte: IBGE (2013)
-    \label{tab:Residentes}
-\end{tabela}
-
- Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste.
-
- \begin{comment}
-Comentários longos podem ser inseridos no ambiente comment. Este texto não será processado pelo compilador e não irá aparecer no PDF final.
- \end{comment}
-
-\section{Desenvolvimento}
-
-  Durante a revisão é comum marcar partes do texto. \hl{Usar o comando \textit{hl} para marcar o texto}. Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste
-
-  \subsection{Tópico 1}
-
-  Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste. Exemplo de listagem. Este trabalho de conclusão de curso foi desenvolvido em quatro etapas:
-\begin{itemize}
-\item Escolha do microcontrolador;
-\item Desenvolvimento de algoritmo para receber e segmentar o \textit{status} do módulo SIM900;
-\item Projeto do circuito eletrônico para \textit{reset} do módulo SIM900;
-\item Design e confecção da PCI na CNC \textit{Router}.
-\end{itemize}
-
-  \subsection{Tópico 2}
-
- Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste.
- 
- Para referenciar um apêndice ou anexo, podem ser utilizados os comandos \textit{ref}, conforme exemplo do \ref{ape:ProgramaPython} ou \ref{anx:ListaAT}.
-
- \subsubsection{Subtópico}
-
-  Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste
+      \subsection{Síntese e Lacuna na Literatura}
+      A literatura apresenta um campo de pesquisa ativo, com um espectro de ferramentas de merge que buscam equilibrar simplicidade, desempenho e precisão. Ao mesmo tempo, emerge um consenso sobre a necessidade de metodologias de avaliação mais robustas, que considerem a correção do código resultante como a principal métrica de sucesso.
+      
+      Neste ponto, identifica-se uma clara lacuna: a ferramenta inovadora \textbf{SESAME}, com sua abordagem única baseada em separadores sintáticos, foi avaliada em seu trabalho original  antes da consolidação desta metodologia de avaliação mais sofisticada. Portanto, seu desempenho em termos de correção, sua taxa de geração de merges incorretos e sua posição em comparação com o estado da arte (ferramentas como Spork, IVn, etc.) sob esta ótica mais rigorosa, são desconhecidos. 
+      Este trabalho preenche essa lacuna ao executar o protocolo de \textcite{schesch2024evaluation} sobre o SESAME, permitindo uma comparação direta de Effort Reduction com as ferramentas estado da arte.
 
 \section{Metodologia}
-
-  Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste.
-
-  \section{Resultados e análise}
-
- Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste.
-
-\section{Considerações finais / Conclusões}
- 
-  Teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste teste
-
-  \printbibliography[title={REFERÊNCIAS}]
-
-\reiniciaAlfa % Reinicia numeração para os Apêndices
-
-\apendice{Exemplo de programa em Python}
-\label{ape:ProgramaPython}
-
-% Mais informações sobre como inserir códigos fonte: https://pt.overleaf.com/learn/latex/Code_listing
-\begin{lstlisting}[language=Python,caption=Exemplo.]
-import numpy as np
+    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
     
-def incmatrix(genl1,genl2):
-    m = len(genl1)
-    n = len(genl2)
-    M = None #to become the incidence matrix
-    VT = np.zeros((n*m,1), int)  #dummy variable
+    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
     
-    #compute the bitwise xor matrix
-    M1 = bitxormatrix(genl1)
-    M2 = np.triu(bitxormatrix(genl2),1) 
+    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    \begin{itemize}
+        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
+        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
+        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+    \end{itemize}
 
-    for i in range(m-1):
-        for j in range(i+1, m):
-            [r,c] = np.where(M2 == M1[i,j])
-            for k in range(len(r)):
-                VT[(i)*n + r[k]] = 1;
-                VT[(i)*n + c[k]] = 1;
-                VT[(j)*n + r[k]] = 1;
-                VT[(j)*n + c[k]] = 1;
-                
-                if M is None:
-                    M = np.copy(VT)
-                else:
-                    M = np.concatenate((M, VT), 1)
-                
-                VT = np.zeros((n*m,1), int)
+    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
     
-    return M
-\end{lstlisting}
+\section{Resultados}
+    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
+    
+    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
+    
+    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    \begin{itemize}
+        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
+        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
+        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+    \end{itemize}
 
-\reiniciaAlfa % Reinicia numeração para os Anexos
+    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
 
-\anexo{Lista de comandos AT utilizados}
-\label{anx:ListaAT}
+\section{Resultados}
+    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
+    
+    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
+    
+    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    \begin{itemize}
+        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
+        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
+        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+    \end{itemize}
 
-\begin{itemize}
-    \item AT: Comando de verificação básica de comunicação, onde o módulo geralmente responde com "OK";
-    \item AT+CCID: Verifica o número do cartão SIM inserido no módulo. O módulo responderá com o número ICCID (\textit{Integrated Circuit Card Identifier}) do cartão SIM, que é um identificador único do cartão;
-    \item AT+CPIN: Verifica o status do PIN (\textit{Personal Identification Number}) do cartão SIM;
-    \item AT+CREG: Consulta o status de registro na rede;
-    \item AT+CSQ: Consulta a qualidade do sinal da rede;
-    \item AT+CMGF: Define o modo de mensagem (texto ou PDU) para envio e recebimento de SMS;
-    \item AT+CMGS: Envia uma mensagem de texto;
-    \item AT+CMGL: Lista mensagens SMS armazenadas na memória do módulo;
-    \item AT+CMGR: Lê uma mensagem SMS específica;
-    \item AT+CMGD: Exclui uma mensagem SMS;
-    \item ATD: Inicia uma chamada telefônica;
-    \item ATH: Encerra uma chamada telefônica;
-    \item AT+CGATT: Ativa ou desativa o serviço GPRS;
-    \item AT+CGDCONT: Define os parâmetros da conexão GPRS;
-    \item AT+CIICR: Inicia a conexão GPRS;
-    \item AT+CIPSTART: Inicia uma conexão TCP ou UDP;
-    \item AT+CIPSEND: Envia dados por meio da conexão TCP ou UDP;
-    \item AT+CIPCLOSE: Fecha uma conexão TCP ou UDP;
-    \item AT+SAPBR: Configura e gerencia a conexão GPRS.
-\end{itemize}
+    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+
+\printbibliography[title={REFERÊNCIAS}]
 
 \end{document}
