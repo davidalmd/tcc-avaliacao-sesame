@@ -52,35 +52,42 @@
 \section{Fundamentação Teórica}
     Esta seção apresenta os conceitos fundamentais sobre controle de versão, as diferentes abordagens para fusão de código (merge) e as metodologias para avaliação da eficácia dessas abordagens. A operação de merge é o processo pelo qual as contribuições de diferentes linhas de desenvolvimento são integradas.
     
-      \subsection{Versionamento de Software e o Desafio do Merge}
-      O desenvolvimento de software moderno é uma atividade eminentemente colaborativa, na qual múltiplos desenvolvedores trabalham em paralelo. Para gerenciar essa complexidade, os Sistemas de Controle de Versão (VCS) são ferramentas indispensáveis. A operação de merge é o processo pelo qual as contribuições de diferentes linhas de desenvolvimento são integradas. Os estudos de \parencite{Mens2002} sobre o tema mostram que a fusão de software é reconhecida como uma área de pesquisa complexa e desafiadora.
+    \subsection{Versionamento de Software e o Desafio do Merge}
+    O desenvolvimento de software moderno é uma atividade eminentemente colaborativa, na qual múltiplos desenvolvedores trabalham em paralelo. Para gerenciar essa complexidade, os Sistemas de Controle de Versão (VCS) são ferramentas indispensáveis. A operação de merge é o processo pelo qual as contribuições de diferentes linhas de desenvolvimento são integradas. Os estudos de \parencite{Mens2002} sobre o tema mostram que a fusão de software é reconhecida como uma área de pesquisa complexa e desafiadora.
+
+    O processo de fusão mais comum é o three-way merge (fusão de três vias), que utiliza três versões de um arquivo para calcular o resultado final: a versão base (o ancestral comum mais próximo), e as duas versões modificadas, left e right (ou local e remota). O objetivo de uma ferramenta de merge é integrar as alterações de forma automática. Quando isso não é possível, a ferramenta reporta um conflito, que exige intervenção manual do desenvolvedor.
+
+    \subsection{O Espectro das Ferramentas de Merge}
+    As ferramentas de merge podem ser classificadas em um espectro de abordagens, que variam em complexidade, precisão e custo computacional.
+
+    \subsubsection{Merge Não Estruturado (Textual)}
+    A abordagem mais tradicional e amplamente utilizada, presente em ferramentas como o git merge padrão, é o merge não estruturado. Essa técnica trata os arquivos de código-fonte como simples sequências de linhas de texto, utilizando algoritmos como o diff3 para identificar e mesclar as diferenças %\cite{Khanna2007}.
+    \begin{itemize}
+    \item \textbf{Vantagens:} São rápidas, consomem poucos recursos e são agnósticas à linguagem de programação, podendo ser aplicadas a qualquer tipo de arquivo de texto.
+    \item \textbf{Desvantagens:} Sua principal fraqueza é a falta de compreensão sobre a estrutura sintática do código. Isso leva à geração de conflitos espúrios (falsos positivos), por exemplo, quando dois desenvolvedores adicionam métodos diferentes na mesma região do arquivo. Além disso, podem falhar em detectar conflitos semânticos reais (falsos negativos), resultando em merges que parecem limpos, mas que quebram a compilação ou o comportamento do programa.
+    \end{itemize}
+
+    \subsubsection{Merge Estruturado}
+    Para superar as limitações do merge textual, pes\-qui\-sa\-do\-res de\-sen\-vol\-ve\-ram o mer\-ge estruturado, que analisa a estrutura sintática do código-fonte. Ferramentas como o Spork baseiam-se em correspondência de nós em árvores AST, enquanto o IntelliMerge  utiliza grafos de elementos de programa. Ambas buscam precisão máxima, mas sofrem com o overhead de desempenho e complexidade de implementação.
+    \begin{itemize}
+    \item \textbf{Vantagens:} Ao compreender a estrutura do programa, podem resolver conflitos que confundem as ferramentas textuais, como a reordenação de declarações de métodos ou campos. Isso resulta em uma maior precisão e na redução de conflitos espúrios.
+    \item \textbf{Desvantagens:} São inerentemente específicas para cada linguagem, exigindo um esforço significativo de implementação para cada nova linguagem suportada. Além disso, a análise e a fusão de ASTs completas podem ser computacionalmente caras, especialmente em arquivos grandes. Exemplos notáveis de ferramentas estruturadas incluem JDime, Spork e Mastery.
+    \end{itemize}
+
+    \subsubsection{Merge Semi-Estruturado}
+    Buscando um ponto de equilíbrio, a abordagem semi-estruturada foi proposta como um híbrido entre as duas anteriores. Ferramentas semi-estruturadas, como a FSTMerge, analisam apenas as estruturas de alto nível do código (como declarações de classes, métodos e campos), representando-as em uma AST parcial. As estruturas de baixo nível, como corpos de métodos e expressões, são tratadas como texto plano e mescladas com o auxílio de uma ferramenta não estruturada \parencite{Apel2011}.
     
-      O processo de fusão mais comum é o three-way merge (fusão de três vias), que utiliza três versões de um arquivo para calcular o resultado final: a versão base (o ancestral comum mais próximo), e as duas versões modificadas, left e right (ou local e remota). O objetivo de uma ferramenta de merge é integrar as alterações de forma automática. Quando isso não é possível, a ferramenta reporta um conflito, que exige intervenção manual do desenvolvedor.
+    Embora essa abordagem reduza a complexidade e o custo com\-pu\-ta\-ci\-o\-nal do mer\-ge estru\-tu\-ra\-do, ela herda parte das imprecisões do merge textual ao lidar com as estruturas de baixo nível.
+
+    \subsubsection{A Abordagem Inovadora do SESAME}
+    Dentro da categoria semi-estruturada, a ferramenta SESAME, proposta por \textcite{cavalcanti2024semistructured}, introduz uma técnica inovadora. Em vez de se basear em uma AST parcial, a SESAME infere a estrutura do código alavancando separadores sintáticos específicos da linguagem (como {, }, (, ), ; em Java). A ferramenta pré-processa as versões do código, inserindo quebras de linha antes e depois de cada separador. Isso faz com que blocos de código que antes estavam na mesma linha (por exemplo, a condição e o corpo de um if) passem a ocupar linhas distintas e não-consecutivas. Em seguida, um algoritmo de merge não estruturado é invocado sobre o código pré-processado, sendo capaz de resolver muitos conflitos que a abordagem semi-estruturada tradicional não conseguiria.
     
-      \subsection{O Espectro das Ferramentas de Merge}
-      As ferramentas de merge podem ser classificadas em um espectro de abordagens, que variam em complexidade, precisão e custo computacional.
-    
-      \subsubsection{Merge Não Estruturado (Textual)}
-      A abordagem mais tradicional e amplamente utilizada, presente em ferramentas como o git merge padrão, é o merge não estruturado. Essa técnica trata os arquivos de código-fonte como simples sequências de linhas de texto, utilizando algoritmos como o diff3 para identificar e mesclar as diferenças %\cite{Khanna2007}.
-      \begin{itemize}
-      \item \textbf{Vantagens:} São rápidas, consomem poucos recursos e são agnósticas à linguagem de programação, podendo ser aplicadas a qualquer tipo de arquivo de texto.
-      \item \textbf{Desvantagens:} Sua principal fraqueza é a falta de compreensão sobre a estrutura sintática do código. Isso leva à geração de conflitos espúrios (falsos positivos), por exemplo, quando dois desenvolvedores adicionam métodos diferentes na mesma região do arquivo. Além disso, podem falhar em detectar conflitos semânticos reais (falsos negativos), resultando em merges que parecem limpos, mas que quebram a compilação ou o comportamento do programa.
-      \end{itemize}
-    
-      \subsubsection{Merge Estruturado}
-      Para superar as limitações do merge textual, pes\-qui\-sa\-do\-res de\-sen\-vol\-ve\-ram o mer\-ge estruturado, que analisa a estrutura sintática do código-fonte. Ferramentas como o Spork baseiam-se em correspondência de nós em árvores AST, enquanto o IntelliMerge  utiliza grafos de elementos de programa. Ambas buscam precisão máxima, mas sofrem com o overhead de desempenho e complexidade de implementação.
-      \begin{itemize}
-      \item \textbf{Vantagens:} Ao compreender a estrutura do programa, podem resolver conflitos que confundem as ferramentas textuais, como a reordenação de declarações de métodos ou campos. Isso resulta em uma maior precisão e na redução de conflitos espúrios.
-      \item \textbf{Desvantagens:} São inerentemente específicas para cada linguagem, exigindo um esforço significativo de implementação para cada nova linguagem suportada. Além disso, a análise e a fusão de ASTs completas podem ser computacionalmente caras, especialmente em arquivos grandes. Exemplos notáveis de ferramentas estruturadas incluem JDime, Spork e Mastery.
-      \end{itemize}
-    
-      \subsubsection{Merge Semi-Estruturado}
-      Buscando um ponto de equilíbrio, a abordagem semi-estruturada foi proposta como um híbrido entre as duas anteriores. Ferramentas semi-estruturadas, como a FSTMerge, analisam apenas as estruturas de alto nível do código (como declarações de classes, métodos e campos), representando-as em uma AST parcial. As estruturas de baixo nível, como corpos de métodos e expressões, são tratadas como texto plano e mescladas com o auxílio de uma ferramenta não estruturada \parencite{Apel2011}.
-      
-      Embora essa abordagem reduza a complexidade e o custo com\-pu\-ta\-ci\-o\-nal do mer\-ge estru\-tu\-ra\-do, ela herda parte das imprecisões do merge textual ao lidar com as estruturas de baixo nível.
-    
-      \subsubsection{A Abordagem Inovadora do SESAME}
-      Dentro da categoria semi-estruturada, a ferramenta SESAME, proposta por \textcite{cavalcanti2024semistructured}, introduz uma técnica inovadora. Em vez de se basear em uma AST parcial, a SESAME infere a estrutura do código alavancando separadores sintáticos específicos da linguagem (como {, }, (, ), ; em Java). A ferramenta pré-processa as versões do código, inserindo quebras de linha antes e depois de cada separador. Isso faz com que blocos de código que antes estavam na mesma linha (por exemplo, a condição e o corpo de um if) passem a ocupar linhas distintas e não-consecutivas. Em seguida, um algoritmo de merge não estruturado é invocado sobre o código pré-processado, sendo capaz de resolver muitos conflitos que a abordagem semi-estruturada tradicional não conseguiria.
+    Para ilustrar o funcionamento, considere o mecanismo de inferência de estrutura. Conforme detalhado por \textcite{cavalcanti2024semistructured}, o processo segue três etapas principais:
+    \begin{itemize}
+    \item \textbf{Pré-processamento:} A ferramenta insere quebras de linha e marcadores especiais (placeholders) antes e depois de cada separador sintático (como \{ ou ;). Isso isola os blocos lógicos em linhas distintas.
+    \item \textbf{Merge Textual:} Uma ferramenta não estruturada (diff3) é executada sobre esse código transformado. Como os blocos agora estão em linhas diferentes, o algoritmo textual consegue distinguir mudanças que antes colidiriam na mesma linha.
+    \item \textbf{Pós-processamento}: Os marcadores e quebras de linha artificiais são removidos, restaurando o código original fundido.
+    \end{itemize}
     
     \subsection{O Desafio de Avaliar Ferramentas de Merge}
       Tão importante quanto desenvolver novas ferramentas é a capacidade de avaliá-las de forma justa e realista. Enquanto o desenvolvimento do SESAME foca na eficiência da resolução de conflitos, a sua validação necessita de um critério de aceitação mais rigoroso do que a mera contagem de linhas. Adota-se, portanto, a perspectiva de \textcite{schesch2024evaluation}, que prioriza a integridade semântica do software resultante.
@@ -108,18 +115,53 @@
       Este trabalho preenche essa lacuna ao executar o protocolo de \textcite{schesch2024evaluation} sobre o SESAME, permitindo uma comparação direta de Effort Reduction com as ferramentas estado da arte.
 
 \section{Metodologia}
-    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
+    \subsection{Desenho do Estudo}
+    Este estudo caracteriza-se como uma pesquisa experimental quantitativa. O desenho experimental segue o protocolo de replicação diferenciada, reutilizando a infraestrutura de avaliação, o conjunto de dados e as métricas propostas por \textcite{schesch2024evaluation}. A variável independente introduzida é a ferramenta de merge SESAME, cujo desempenho será contrastado com as ferramentas de referência (baselines) do estudo original: Git Merge (abordagem textual) e Spork (abordagem estruturada).
     
-    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
-    
-    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    \subsection{Seleção e Preparação do Conjunto de Dados}
+    Para garantir a representatividade dos resultados, utiliza-se o conjunto de dados curado por \textcite{schesch2024evaluation}, derivado de repositórios Java de alta qualidade listados nos datasets "GitHub's Greatest Hits" e "Reaper".
+
+    O processo de filtragem dos cenários de merge obedeceu aos seguintes critérios rigorosos para isolar a responsabilidade da ferramenta de merge:
+    \begin{enumerate}
+        \item \textbf{Relevância:} Apenas projetos Java que utilizam sistemas de automação de build Maven ou Gradle.
+        \item \textbf{Sanidade dos Pais:} Foram selecionados apenas cenários onde ambos os commits pais (as duas versões a serem fundidas) compilam e passam em todos os testes existentes. Isso assegura que qualquer falha detectada após a fusão foi causada exclusivamente pelo processo de merge e não por defeitos pré-existentes.
+        \item \textbf{Diversidade de Fontes:} O dataset inclui tanto merges do ramo principal (main branch) quanto de ramos secundários (feature branches), capturando a complexidade real do fluxo de desenvolvimento, conforme recomendado por \textcite{schesch2024evaluation}.
+    \end{enumerate}
+
+    \subsection{Integração da Ferramenta SESAME}
+    A infraestrutura original de Schesch foi projetada para ser extensível, exigindo que novas ferramentas sejam integradas via shell scripts padronizados. Para permitir a avaliação do SESAME, foram desenvolvidos dois artefatos de integração distintos, seguindo as diretrizes do framework original:
+    \begin{enumerate}
+        \item \textbf{Integração Básica (sesame.sh):} Foi desenvolvido um script wrapper que configura o SESAME como um merge driver nativo do Git. A implementação completa deste script encontra-se no \textbf{Apêndice \ref{apendice:sesame_sh}}. Ele automatiza a invocação do executável sesame.jar utilizando a estratégia de separadores (-tms csdiff), garantindo que os parâmetros de revisão base, local e remota sejam passados corretamente.
+        \item \textbf{Integração Híbrida (sesame\_plus.sh):} Para uma comparação justa com os resultados de \textcite{schesch2024evaluation}, que avaliaram ferramentas em conjunto com utilitários de limpeza, foi criado um segundo script denominado \texttt{sesame\_plus.sh} (disponível no \textbf{Apêndice \ref{apendice:sesame_plus}}). Este artefato orquestra a execução sequencial do SESAME seguida pela ferramenta Plume-lib Merging, reutilizando a lógica de integração da infraestrutura original para garantir consistência com os baselines.
+    \end{enumerate}
+
+    \subsection{Procedimento Experimental e Execução de Testes}
+    O experimento foi configurado para executar as duas variantes da ferramenta (sesame e sesame\_plus) sobre o dataset selecionado. O fluxo de execução para cada cenário de merge obedeceu aos seguintes passos:
+    \begin{enumerate}
+        \item \textbf{Checkout e Preparação:} O framework realiza o checkout forçado da versão local (branch1) e configura o estilo de conflito do Git para diff3.
+        \item \textbf{Execução do Merge:} O script correspondente (sesame.sh ou sesame\_plus.sh) é invocado. No caso do sesame\_plus, se o SESAME deixar conflitos, o Plume-lib é acionado com a estratégia merge-plumelib para tentar resolvê-los automaticamente.
+        \item \textbf{Verificação de Sucesso:} O script verifica o código de retorno. Se for diferente de 0 ou se o Git ainda reportar arquivos com marcadores de conflito (diff-filter=U), o merge é classificado como Não Tratado (Unhandled).
+        \item \textbf{Validação de Corretude:} Se o merge for reportado como limpo (código de retorno 0), inicia-se a fase de compilação e testes (conforme detalhado na seção 3.5).
+    \end{enumerate}
+
+    \subsection{Métricas de Avaliação}
+    A classificação dos resultados baseia-se na integridade semântica do código, e não apenas na textual:
     \begin{itemize}
-        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
-        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
-        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+        \item \textbf{Merge Correto (Correct):} Fusão limpa e todos os testes passam.
+        \item \textbf{Merge Incorreto (Incorrect):} Fusão limpa, mas ocorre falha na compilação ou nos testes.
+        \item \textbf{Merge Não Tratado (Unhandled):} A ferramenta reporta conflito.
     \end{itemize}
 
-    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+    \textbf{Métrica de Redução de Esforço (Effort Reduction):} Para comparar quantitativamente as ferramentas, utiliza-se a métrica de Effort Reduction proposta por \textcite{schesch2024evaluation}. Esta métrica penaliza desproporcionalmente os merges incorretos, assumindo que corrigir um erro silencioso é mais custoso do que resolver um conflito explícito.
+    
+    A fórmula utilizada é:
+    \begin{equation}
+        Effort Reduction= 1 - \frac{Unhandled + (Incorrect \times k)}{NumMerges}
+    \end{equation}
+    Onde:
+    \begin{itemize}
+        \item \textit{k} é o fator de custo relativo de um merge incorreto. Conforme a análise de sensibilidade de Schesch, o valor de \textit{k} varia (e.g., de 1 a 20) para demonstrar como a penalidade afeta o ranking das ferramentas.
+    \end{itemize}
     
 \section{Resultados}
     A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
@@ -135,7 +177,7 @@
 
     Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
 
-\section{Resultados}
+\section{Discussão}
     A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
     
     O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
@@ -148,6 +190,122 @@
     \end{itemize}
 
     Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+
+\section{Trabalhos Relacionadas}
+    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
+
+    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
+
+    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    \begin{itemize}
+        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
+        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
+        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+    \end{itemize}
+
+    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+
+\section{Conclusão}
+    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
+    
+    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
+    
+    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    \begin{itemize}
+        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
+        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
+        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+    \end{itemize}
+
+    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+
+\appendix
+\section*{Apêndices}
+\addcontentsline{toc}{section}{Apêndices}
+
+\section{Script de Integração Básica (sesame.sh)}
+\label{apendice:sesame_sh}
+
+Este \textit{script} configura o SESAME como um driver de \textit{merge} no Git e executa a ferramenta com a estratégia de diferenciação baseada em separadores (\texttt{csdiff}).
+
+\begin{lstlisting}[language=bash, caption={Wrapper para execução do SESAME (sesame.sh)}, label={lst:sesame_sh}]
+#!/usr/bin/env sh
+
+# usage: <scriptname> [--verbose] <clone_dir> <branch-1> <branch-2>
+# <clone_dir> must contain a clone of a repository.
+# Merges branch2 into branch1, in <clone_dir>.
+# Return code is 0 for merge success, 1 for merge failure, 2 for script failure.
+# For merge failure, also outputs "Conflict" and aborts the merge.
+
+set -o nounset
+
+verbose=
+if [ "$1" = "--verbose" ] ; then
+  verbose="$1"
+  shift
+fi
+
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 [--verbose] CLONE_DIR BRANCH1 BRANCH2" >&2
+  exit 2
+fi
+
+clone_dir=$1
+branch1=$2
+branch2=$3
+
+SCRIPT_PATH="$(dirname "$0")"; SCRIPT_PATH="$(eval "cd \"$SCRIPT_PATH\" && pwd")"
+ROOT_PATH="$(realpath "${SCRIPT_PATH}/../../../")"
+JAR_RELATIVE_PATH="jars/sesame.jar" 
+JAR_ABSOLUTE_PATH="${ROOT_PATH}/${JAR_RELATIVE_PATH}"
+
+TOOL_NAME="sesame"
+
+TOOL_COMMAND="java -jar ${JAR_ABSOLUTE_PATH} %A %O %B -o %A -c false -l false -tms csdiff"
+
+cd "$clone_dir" || { echo "$0: cannot cd to $clone_dir"; exit 2; }
+
+git config --local merge.${TOOL_NAME}.name "${TOOL_NAME} merge driver"
+git config --local merge.${TOOL_NAME}.driver "${TOOL_COMMAND}"
+
+echo "*.java merge=${TOOL_NAME}" >> .gitattributes
+
+git checkout "$branch1" --force
+git merge --no-edit "$branch2"
+retVal=$?
+
+if [ $retVal -ne 0 ]; then
+    echo "${TOOL_NAME}.sh: Conflict"
+fi
+
+exit $retVal
+\end{lstlisting}
+
+\section{Script de Integração Híbrida (sesame\_plus.sh)}
+\label{apendice:sesame_plus}
+
+Este \textit{script} implementa a estratégia composta, executando o SESAME e, subsequentemente, acionando a ferramenta Plume-lib para refinamento do resultado.
+
+\begin{lstlisting}[language=bash, caption={Orquestrador Híbrido (sesame\_plus.sh)}, label={lst:sesame_plus}]
+#!/usr/bin/env sh
+
+# usage: <scriptname> [--verbose] <clone_dir> <branch-1> <branch-2>
+
+MERGE_SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd -P)"
+
+if [ "$1" = "--verbose" ] ; then
+  shift
+fi
+
+clone_dir=$1
+branch1=$2
+branch2=$3
+
+merge_script="sesame.sh"
+plumelib_strategy=""
+
+"$MERGE_SCRIPTS_DIR"/merge_script_then_plumelib.sh "$clone_dir" "$branch1" "$branch2" "$merge_script" "$plumelib_strategy"
+\end{lstlisting}
 
 \printbibliography[title={REFERÊNCIAS}]
 
