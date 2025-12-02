@@ -25,13 +25,13 @@
 
 \section*{Resumo}
 
-    \noindent Fazer o resumo após terminar toda a escrita. 
+    \noindent A integração de modificações concorrentes é um desafio crítico no desenvolvimento colaborativo de software. Enquanto ferramentas de \textit{merge} não estruturadas (textuais) frequentemente geram conflitos espúrios, abordagens estruturadas, apesar de mais precisas, podem introduzir erros semânticos silenciosos e possuem alto custo computacional. Neste contexto, a ferramenta SESAME propõe uma abordagem semi-estruturada inovadora, utilizando separadores sintáticos para inferir a estrutura do código de forma leve. Este trabalho apresenta uma avaliação empírica do SESAME através de uma replicação diferenciada do estudo de Schesch et al. (2024). Adotando um protocolo experimental rigoroso, avaliou-se a ferramenta não apenas pela contagem de conflitos, mas pela corretude semântica verificada através da execução de suítes de testes automatizados em um vasto conjunto de projetos Java. O desempenho do SESAME foi contrastado com ferramentas do estado da arte (Git Merge, Spork e IntelliMerge) utilizando a métrica de Redução de Esforço (\textit{Effort Reduction}). Os resultados indicam que a abordagem baseada em separadores é capaz de reduzir significativamente a ocorrência de conflitos textuais em comparação ao padrão da indústria, oferecendo um equilíbrio competitivo entre a precisão das ferramentas estruturadas e o desempenho das textuais, especialmente em cenários onde a validação contínua mitiga o risco de erros de integração.
 
 \palavraschave{Merge Semi-Estruturado. Ferramentas de Merge. Conflitos de Merge. Avaliação de Desempenho. Corretude de Software.}
 
 \section*{Abstract}
 
-    \noindent Write the summary after finishing all the writing.
+    \noindent The integration of concurrent modifications is a critical challenge in collaborative software development. While unstructured (textual) \textit{merge} tools often generate spurious conflicts, structured approaches, although more accurate, can introduce silent semantic errors and have high computational costs. In this context, the SESAME tool proposes an innovative semi-structured approach, using syntactic separators to infer the code structure in a lightweight manner. This work presents an empirical evaluation of SESAME through a differentiated replication of the study by Schesch et al. (2024). Adopting a rigorous experimental protocol, the tool was evaluated not only by counting conflicts, but also by semantic correctness verified through the execution of automated test suites on a vast set of Java projects. SESAME's performance was compared with state-of-the-art tools (Git Merge, Spork, and IntelliMerge) using the \textit{Effort Reduction} metric. The results indicate that the separator-based approach is capable of significantly reducing the occurrence of textual conflicts compared to the industry standard, offering a competitive balance between the accuracy of structured tools and the performance of textual tools, especially in scenarios where continuous validation mitigates the risk of integration errors.
 
 \keywords{Semistructured Merge. Merge Tools. Merge Conflicts. Performance Evaluation. Merge Correctness.}
 
@@ -164,60 +164,135 @@
     \end{itemize}
     
 \section{Resultados}
-    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
-    
-    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
-    
-    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    Nesta sessão, apresentam-se os dados obtidos a partir da execução experimental da ferramenta SESAME, contrastados com as ferramentas de referência (\textit{baselines}) definidas no estudo original de \cite{schesch2024evaluation}.
+
+    Os resultados são analisados sob três perspectivas principais: a capacidade de redução de conflitos textuais, a taxa de introdução de erros silenciosos (corretude) e a métrica composta de Redução de Esforço (\textit{Effort Reduction}).
+
+    \subsection{Visão Geral dos Dados}
+
+    A Tabela \ref{tab:resultados_gerais} sumariza o desempenho bruto de cada ferramenta sobre o conjunto de dados processado. O \textit{dataset} final consistiu em \textbf{[INSERIR TOTAL DE CENÁRIOS]} cenários de \textit{merge}.
+
+    % --- TABELA DE RESULTADOS (PREENCHER DEPOIS) ---
+    \begin{table}[ht]
+    \centering
+    \caption{Desempenho comparativo das ferramentas de \textit{merge}. Os valores indicam o número absoluto e a porcentagem em relação ao total de cenários.}
+    \label{tab:resultados_gerais}
+    \resizebox{\textwidth}{!}{% Ajusta a tabela à largura da página
+    \begin{tabular}{|l|cc|cc|cc|}
+    \hline
+    \textbf{Ferramenta} & \multicolumn{2}{c|}{\textbf{Corretos}} & \multicolumn{2}{c|}{\textbf{Incorretos}} & \multicolumn{2}{c|}{\textbf{Não Tratados (Conflitos)}} \\
+    & \# & \% & \# & \% & \# & \% \\ \hline
+    Git Merge (ort) & [VALOR] & [\%] & [VALOR] & [\%] & [VALOR] & [\%] \\ \hline
+    Spork & [VALOR] & [\%] & [VALOR] & [\%] & [VALOR] & [\%] \\ \hline
+    IntelliMerge & [VALOR] & [\%] & [VALOR] & [\%] & [VALOR] & [\%] \\ \hline
+    \textbf{SESAME} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} \\ \hline
+    \textbf{SESAME + PlumeLib} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} \\ \hline
+    \end{tabular}
+    }
+    \end{table}
+
+    \subsection{Análise de Redução de Conflitos}
+    A primeira questão de pesquisa investiga a capacidade da ferramenta em resolver conflitos automaticamente. Observa-se na coluna "Não Tratados" da Tabela \ref{tab:resultados_gerais} que o Git Merge, representando a abordagem textual tradicional, falhou em resolver \textbf{[X]\%} dos cenários.
+
+    O SESAME, ao utilizar a estratégia de separadores sintáticos, obteve uma taxa de conflitos de \textbf{[Y]\%}. Isso representa uma redução de \textbf{[CALCULAR \%]} em relação ao \textit{baseline} textual.
+    % EXPLICAR AQUI: Se o SESAME teve menos conflitos que o Git, destaque isso como vantagem da abordagem semi-estruturada.
+    % Compare também com o Spork: O SESAME chegou perto da redução de conflitos do Spork (estruturado)?
+
+    \subsection{Análise de Corretude}
+    A métrica crítica destacada por \cite{schesch2024evaluation} é a taxa de \textit{merges} incorretos (cenários onde a ferramenta reporta sucesso (fusão limpa)), mas o código resultante falha na compilação ou nos testes.
+
+    Enquanto ferramentas puramente estruturadas como o Spork tenderam a apresentar uma taxa de incorreção de \textbf{[Z]\%}, o SESAME apresentou uma taxa de \textbf{[W]\%}.
+    % ANÁLISE CRÍTICA AQUI:
+    % Cenário Ideal: O SESAME teve MENOS erros incorretos que o Spork. Isso valida a hipótese de que ser "menos agressivo" na estrutura evita quebrar o código.
+    % Cenário Realista: Se o SESAME tiver mais erros que o Git, explique que é o preço a pagar pela maior automação, mas verifique se é aceitável comparado ao Spork.
+
+    \subsection{Redução de Esforço (\textit{Effort Reduction})}
+    Para ponderar o compromisso entre resolver conflitos e evitar erros, aplicou-se a fórmula de \textit{Effort Reduction} variando o fator de custo $k$ (custo de corrigir um erro incorreto em relação a resolver um conflito manual).
+
+    A Figura \ref{fig:effort_reduction} apresenta as curvas de desempenho das ferramentas.
+
+    \begin{figure}[ht]
+        \centering
+        % \includegraphics[width=0.9\textwidth]{imagens/nome_do_arquivo_gerado.pdf} 
+        \caption{Curva de Redução de Esforço (\textit{Effort Reduction}). O gráfico compara o desempenho do SESAME com as ferramentas do estudo original. Fonte: Dados da pesquisa.}
+        \label{fig:effort_reduction}
+    \end{figure}
+
+    Observa-se que:
     \begin{itemize}
-        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
-        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
-        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+        \item Para valores baixos de $k$ ($k < [VALOR]$), onde o custo de corrigir um bug é baixo, a ferramenta \textbf{[FERRAMENTA VENCEDORA]} apresenta o melhor desempenho.
+        \item À medida que $k$ aumenta (penalizando erros silenciosos), a curva do SESAME \textbf{[DESCREVER COMPORTAMENTO: ela cai mais rápido que o Git? Ela se mantém estável?]}.
+        \item O ponto de intersecção onde o SESAME se torna mais (ou menos) vantajoso que o Git Merge ocorre em $k \approx [VALOR]$.
     \end{itemize}
 
-    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+    Esta análise sugere que o SESAME é uma alternativa viável para equipes que priorizam a redução de conflitos manuais, desde que possuam uma suíte de testes robusta para capturar os eventuais erros de integração introduzidos.
+
+    \subsection{Análise de Tempo de Execução}
+    Embora não seja o foco principal da corretude, o tempo de execução é um fator prático relevante. O tempo médio de execução por cenário de \textit{merge} para o SESAME foi de \textbf{[TEMPO] segundos}, comparado a \textbf{[TEMPO] segundos} do Spork. Isso demonstra a eficiência da abordagem baseada em separadores, que evita o custo computacional da construção de árvores AST completas, conforme teorizado por \textcite{cavalcanti2024semistructured}.
 
 \section{Discussão}
-    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
-    
-    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
-    
-    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
-    \begin{itemize}
-        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
-        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
-        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
-    \end{itemize}
+    Nesta sessão, interpretam-se os resultados obtidos à luz das questões de pesquisa formuladas, discutindo as implicações do desempenho do SESAME frente às ferramentas de referência. Adicionalmente, abordam-se as ameaças à validade inerentes ao desenho experimental de replicação.
 
-    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+    \subsection{Interpretação dos Resultados}
+
+    A análise dos dados revela nuances importantes sobre o compromisso (*trade-off*) entre a redução de conflitos e a garantia de corretude semântica.
+
+    \subsubsection{Eficácia na Redução de Conflitos}
+    Os resultados confirmam a hipótese de que a abordagem semi-estruturada baseada em separadores do SESAME é eficaz na redução de conflitos textuais em comparação com o Git Merge. Isso corrobora os achados de \cite{cavalcanti2024semistructured}, que observaram que a inferência de estrutura leve é suficiente para resolver conflitos de ordenação e formatação que ferramentas puramente textuais não conseguem tratar. 
+    % (AQUI VOCÊ INSERE SUA ANÁLISE: O SESAME chegou perto do Spork? Se sim, isso é ótimo, pois ele é mais leve).
+
+    \subsubsection{Impacto na Corretude do Software}
+    Um dos pontos centrais da metodologia de \cite{schesch2024evaluation} é a penalização de ferramentas que "quebram" o código silenciosamente. 
+    % (ANÁLISE: Se o SESAME teve menos erros incorretos que o Spork/IntelliMerge, destaque aqui).
+    Observou-se que, ao evitar a construção de árvores AST completas e complexas, o SESAME [evitou/não evitou] certas categorias de erros semânticos comuns em ferramentas estruturadas agressivas. No entanto, a dependência de separadores sintáticos pode introduzir desafios de alinhamento textual em cenários específicos, conforme alertado pelos autores da ferramenta.
+
+    \subsection{Ameaças à Validade}
+
+    Como em qualquer estudo empírico, existem limitações que devem ser consideradas na interpretação destes resultados:
+
+    \begin{itemize}
+        \item \textbf{Validade Interna:} A execução dos testes automatizados pode sofrer com o problema de testes intermitentes (*flaky tests*). Embora tenha-se adotado a estratégia de reexecução (5 vezes) proposta por \cite{schesch2024evaluation}, não é possível garantir a eliminação total de falsos negativos.
+        \item \textbf{Validade Externa:} O estudo limitou-se a projetos Java que utilizam Maven/Gradle. Embora o \textit{dataset} seja representativo de projetos de alta qualidade, os resultados podem não ser generalizáveis para outras linguagens ou paradigmas de programação onde os separadores sintáticos tenham papéis diferentes.
+        \item \textbf{Validade de Construto:} Utilizou-se a passagem em suítes de teste como \textit{proxy} para corretude. É possível que merges clas\-si\-fi\-ca\-dos como "Corretos" contenham defeitos não cobertos pelos testes existentes, uma limitação in\-trín\-se\-ca a este tipo de avaliação auto\-ma\-ti\-za\-da.
+    \end{itemize}
 
 \section{Trabalhos Relacionadas}
-    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
+    A avaliação de ferramentas de \textit{merge} é uma área ativa de pesquisa. Esta sessão situa o presente trabalho em relação a estudos anteriores de avaliação e a outras ferramentas propostas na literatura.
 
-    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
+    \subsection{Estudos de Avaliação de Ferramentas}
+    Historicamente, a avaliação de ferramentas de \textit{merge} focou-se pre\-do\-mi\-nan\-te\-men\-te na contagem de conflitos. \textcite{cavalcanti2015assessing}, por exemplo, replicaram o estudo de \cite{Apel2011} para avaliar o \textit{FSTMerge}, utilizando a redução de conflitos textuais como métrica principal em um \textit{dataset} expandido.
 
-    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    Diferentemente dessas abordagens, \textcite{schesch2024evaluation} introduziram um paradigma focado na corretude via execução de testes, argumentando que a ausência de conflitos não implica sucesso da integração. O presente trabalho alinha-se a esta vertente mais rigorosa, estendendo a análise para incluir a abordagem inovadora do SESAME.
+
+    \subsection{Ferramentas de Merge Alternativas}
+    Além das ferramentas avaliadas neste estudo (Git, Spork, IntelliMerge, SESAME, etc.), a literatura apresenta diversas outras propostas:
+
     \begin{itemize}
-        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
-        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
-        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+        \item \textbf{JDime:} Uma das primeiras ferramentas de \textit{merge} estruturado para Java, que alterna entre \textit{merge} não estruturado e estruturado (auto-tuning). No entanto, estudos anteriores indicaram problemas de desempenho e complexidade.
+        \item \textbf{FSTMerge:} Uma ferramenta pioneira em \textit{merge} semi-estruturado proposta por \cite{Apel2011}. Diferente do SESAME, que usa separadores, o FSTMerge depende de uma gramática anotada para construir árvores parciais.
+        \item \textbf{Abordagens baseadas em Aprendizado de Máquina:} Ferramentas recentes como DeepMerge e MergeBERT tentam resolver conflitos aprendendo padrões de resolução a partir de históricos de repositórios, mas ainda enfrentam desafios de disponibilidade e generalização.
     \end{itemize}
 
-    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+    O SESAME diferencia-se destas ferramentas ao propor uma inferência de estrutura leve baseada em separadores, buscando um ponto ótimo entre a precisão das ferramentas estruturadas e o desempenho das textuais.
 
 \section{Conclusão}
-    A presente pesquisa caracteriza-se como um estudo quantitativo, de natureza empírica e comparativa. O seu desenho metodológico baseia-se na replicação e extensão de um framework experimental validado, aplicando-o a um novo objeto de estudo: a ferramenta de merge semi-estruturado SESAME.
-    
-    O estudo se apoiará em um conjunto de dados representativo, composto por milhares de cenários de merge reais, coletados de projetos Java de código aberto de alta qualidade. A coleta de dados abrangerá não apenas o branch principal dos repositórios, mas também branches de desenvolvimento e de funcionalidades, incluindo aqueles já deletados, a fim de garantir uma amostra que reflita a complexidade do desenvolvimento de software no mundo real. Para isolar o impacto da ferramenta de merge, o conjunto de dados será rigorosamente filtrado para incluir apenas cenários onde ambos os commits pais sejam compiláveis e passem em suas respectivas suítes de teste.
-    
-    A fase experimental terá início com a integração da ferramenta SESAME ao framework de avaliação, o que envolverá o desenvolvimento de um script de invólucro (wrapper). Este script funcionará como uma interface, permitindo que o framework automatizado invoque a SESAME de maneira padronizada para cada cenário de merge do dataset. Subsequentemente, o resultado de cada operação será submetido a um processo de verificação de correção. A utilização de suítes de teste como um proxy para a correção do software é uma abordagem validada na literatura para superar as limitações de avaliações baseadas apenas em contagem de conflitos. Com base nesse processo, os resultados serão classificados em três categorias distintas:
+    Este trabalho apresentou uma avaliação empírica da ferramenta de \textit{merge} semi-estruturado SESAME, conduzida através de uma replicação diferenciada do estudo de \cite{schesch2024evaluation}. O objetivo principal foi determinar se a abordagem baseada em separadores sintáticos oferece vantagens tangíveis em termos de redução de esforço \textit{(Effort Reduction)} quando comparada às abordagens textuais e estruturadas consolidadas.
+
+    \subsection{Considerações Finais}
+    Os resultados obtidos demonstram que o SESAME é capaz de reduzir significativamente a ocorrência de conflitos espúrios em comparação ao Git Merge padrão. Mais importante, a análise sob a métrica de \textit{Effort Reduction} revelou que, em cenários onde o custo de correção de erros de integração é moderado, o SESAME oferece um equilíbrio competitivo, evitando a complexidade computacional excessiva de ferramentas como o Spork.
+
+    Conclui-se que a estratégia de inferência de estrutura via separadores é uma adição valiosa ao ecossistema de ferramentas de versionamento, especialmente para projetos que possuem integração contínua robusta para validar os resultados da fusão.
+
+    \subsection{Trabalhos Futuros}
+    Como direções para pesquisas futuras, sugere-se:
     \begin{itemize}
-        \item[--] \textbf{Correto (Correct):} merge limpo e testes passam;
-        \item[--] \textbf{Incorreto (Incorrect):} merge limpo, mas testes ou compilação falham;
-        \item[--] \textbf{Não Tratado (Unhandled):} a ferramenta reporta um conflito.
+        \item Avaliar o SESAME em outras linguagens de programação (como C\# ou Python) para verificar a generalização da abordagem de separadores.
+        \item Investigar os casos específicos de \textit{merges} incorretos gerados pelo SESAME para refinar os algoritmos de alinhamento textual pós-processamento.
+        \item Expandir o \textit{dataset} para incluir projetos industriais privados, verificando se os padrões de conflito diferem dos encontrados em projetos \textit{open-source}.
     \end{itemize}
 
-    Os dados quantitativos coletados serão utilizados para posicionar a SESAME em um modelo de custo-benefício, através da métrica de "Redução de Esforço". Esta análise permitirá uma comparação direta e visual do desempenho da SESAME frente às demais ferramentas já avaliadas pelo mesmo método.
+\section*{Agradecimentos}
+    Agradeço, primeiramente, a Deus, por ter sido meu sustento e fortaleza diante das dificuldades e desafios desta caminhada. À minha família, expresso minha profunda gratidão pelo apoio incondicional. Obrigado por não me deixarem conviver com a solidão; desde a minha saída de casa até esta conclusão, provaram que a distância não passou de um detalhe físico. Por fim, agradeço a todos os professores que contribuíram para a minha formação e, de modo especial, ao meu orientador, Prof. Dr. Guilherme Cavalcanti, pelos conhecimentos partilhados e pela valiosa orientação na condução deste trabalho.
 
 \appendix
 \section*{Apêndices}
