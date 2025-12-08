@@ -89,30 +89,197 @@
     \item \textbf{Pós-processamento}: Os marcadores e quebras de linha artificiais são removidos, restaurando o código original com o \textit{merge}.
     \end{itemize}
     
+    \subsection{Exemplo Prático de Comportamento das Ferramentas}
+    Para ilustrar as diferenças fundamentais entre as abordagens avaliadas, apresenta-se um cenário comum de desenvolvimento: a adição concorrente de dois métodos independentes na mesma região de uma classe Java.
+
+    A Figura \ref{fig:cenario_input} apresenta o cenário de entrada: a versão Base (vazia) e as alterações realizadas nos ramos \textit{Left} (adição do método \texttt{sum}) e \textit{Right} (adição do método \texttt{sub}).
+
+    \begin{figure}[ht]
+        \centering
+        % Left
+        \begin{minipage}{0.3\textwidth}
+            \centering
+            \textbf{Left (Local)}
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single]
+class MathUtils {
+    int sum(int a, int b) {
+        return a + b;
+    }
+}
+            \end{lstlisting}
+        \end{minipage}
+        \hfill
+        % Base
+        \begin{minipage}{0.28\textwidth}
+            \centering
+            \textbf{Base}
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single]
+class MathUtils {
+    // Classe vazia
+}
+            \end{lstlisting}
+        \end{minipage}
+        \hfill
+        % Right
+        \begin{minipage}{0.3\textwidth}
+            \centering
+            \textbf{Right (Remoto)}
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single]
+class MathUtils {
+    int sub(int a, int b) {
+        return a - b;
+    }
+}
+            \end{lstlisting}
+        \end{minipage}
+        \caption{Cenário de \textit{merge}: adição independente de métodos no mesmo local físico do arquivo.}
+        \label{fig:cenario_input}
+    \end{figure}
+
+    A seguir, demonstra-se como cada categoria de ferramenta processa este cenário.
+
+    \subsubsection{Merge Textual (Git Merge)}
+    O Git Merge (não estruturado) trata o arquivo como uma sequência de linhas. Como ambas as modificações ocorreram no mesmo ponto de inserção (dentro das chaves da classe), a ferramenta não consegue determinar a ordem correta e reporta um conflito, exigindo intervenção manual (Figura \ref{fig:resultado_git}).
+
+    \begin{figure}[ht]
+        \centering
+        \begin{minipage}{0.8\textwidth}
+            \centering
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\small, frame=single, keywordstyle=\color{blue}]
+ class MathUtils {
+ <<<<<<< HEAD
+     int sum(int a, int b) {
+         return a + b;
+     }
+ =======
+     int sub(int a, int b) {
+         return a - b;
+     }
+ >>>>>>> branch-right
+ }
+            \end{lstlisting}
+        \end{minipage}
+        \caption{Resultado do Git Merge: conflito textual reportado devido à sobreposição de linhas.}
+        \label{fig:resultado_git}
+    \end{figure}
+
+    \subsubsection{Merge Estruturado (Spork)}
+    O Spork (estruturado) constrói a Árvore Sintática Abstrata (AST) do código. Ele identifica que \texttt{sum} e \texttt{sub} são declarações de métodos distintos adicionadas ao nó da classe \texttt{MathUtils}. Como a ordem de métodos não afeta a semântica em Java, a ferramenta realiza a fusão automaticamente, produzindo um \textit{merge} limpo e correto (Figura \ref{fig:resultado_spork_sesame}).
+
+    \subsubsection{Merge Semi-estruturado (SESAME)}
+    O SESAME (semi-estruturado) utiliza separadores sintáticos (neste caso, as chaves \texttt{\{\}}) para inferir a estrutura. Ao pré-processar o texto inserindo quebras de linha nos separadores, ele isola os blocos de código. Isso permite que o algoritmo textual subjacente distinga as duas inserções como blocos independentes, alcançando o mesmo resultado de sucesso do Spork, mas com menor custo computacional (Figura \ref{fig:resultado_spork_sesame}).
+
+    \begin{figure}[ht]
+        \centering
+        \begin{lstlisting}[language=Java, basicstyle=\ttfamily\small, frame=single, keywordstyle=\color{blue}]
+class MathUtils {
+    int sum(int a, int b) {
+        return a + b;
+    }
+
+    int sub(int a, int b) {
+        return a - b;
+    }
+}
+        \end{lstlisting}
+        \caption{Resultado obtido tanto pelo Spork quanto pelo SESAME: fusão automática bem-sucedida (Clean Merge).}
+        \label{fig:resultado_spork_sesame}
+    \end{figure}
+
+    \subsection{Visualização do Processamento Interno}
+
+    Para compreender por que o resultado difere, é necessário observar a representação interna que cada ferramenta constrói a partir do código fonte.
+
+    \subsubsection{Representação em Árvore (Estruturado/Spork)}
+    Enquanto o Git vê apenas texto, o Spork converte o código numa Árvore Sintática Abstrata (AST). A Figura \ref{fig:ast_example} ilustra como a ferramenta "enxerga" a classe \texttt{MathUtils}. O conflito desaparece porque a adição do método \texttt{sum} (Left) e \texttt{sub} (Right) ocorre como novos nós filhos do nó \texttt{ClassDeclaration}, e não como linhas sobrepostas.
+
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[
+            level distance=2.5cm,
+            level 1/.style={sibling distance=5.5cm},
+            level 2/.style={sibling distance=5.5cm},
+            every node/.style = {shape=rectangle, rounded corners,
+                draw, align=center,
+                top color=white, bottom color=blue!20}]
+                
+        \node {ClassDeclaration \\ \textbf{"MathUtils"}}
+            child { node {MethodDeclaration \\ \textbf{"sum"} \\ (Vindo de Left)} }
+            child { node {MethodDeclaration \\ \textbf{"sub"} \\ (Vindo de Right)} };
+        \end{tikzpicture}
+        \caption{Representação simplificada da AST gerada por ferramentas estruturadas. As alterações são nós independentes na árvore, eliminando o conflito textual.}
+        \label{fig:ast_example}
+    \end{figure}
+
+    \subsubsection{Representação com Separadores (SESAME)}
+    O SESAME não constrói a árvore completa, mas "engana" o algoritmo textual inserindo marcadores artificiais. A Figura \ref{fig:sesame_intermediate} demonstra o estado intermediário do arquivo (Pós-processamento) antes da fusão.
+
+    Observe os marcadores \texttt{\$\$\$\$\$\$} inseridos nos separadores \texttt{\{} e \texttt{\}}. Eles forçam o algoritmo textual a tratar as chaves e os corpos dos métodos como blocos distantes, permitindo que o \textit{diff3} insira ambos sem conflito.
+
+    % --- CÓDIGO DO SESAME COM $$$$$$ ---
+    \begin{figure}[ht]
+        \centering
+        % Left
+        \begin{minipage}{0.45\textwidth}
+            \centering
+            \textbf{Left (Transformado)}
+            \begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single, backgroundcolor=\color{yellow!10}, showstringspaces=false]
+class MathUtils
+$$$$$$ {
+$$$$$$
+    int sum(int a, int b)
+    $$$$$$ {
+    $$$$$$
+        return a + b;
+    $$$$$$ }
+$$$$$$ }
+            \end{lstlisting}
+        \end{minipage}
+        \hfill
+        % Right
+        \begin{minipage}{0.45\textwidth}
+            \centering
+            \textbf{Right (Transformado)}
+            \begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single, backgroundcolor=\color{yellow!10}, showstringspaces=false]
+class MathUtils
+$$$$$$ {
+$$$$$$
+    int sub(int a, int b)
+    $$$$$$ {
+    $$$$$$
+        return a - b;
+    $$$$$$ }
+$$$$$$ }
+            \end{lstlisting}
+        \end{minipage}
+        \caption{Visualização do mecanismo do SESAME: inserção de quebras de linha e \textit{placeholders} (\texttt{\$\$\$}) nos separadores sintáticos para isolar os blocos de código.}
+        \label{fig:sesame_intermediate}
+    \end{figure}
+
     \subsection{O Desafio de Avaliar Ferramentas de \textit{Merge}}
-      Tão importante quanto desenvolver novas ferramentas é a capacidade de avaliá-las de forma justa e realista. Enquanto o desenvolvimento do SESAME foca na eficiência da resolução de conflitos, a sua validação necessita de um critério de aceitação mais rigoroso do que a mera contagem de linhas. Adota-se, portanto, a perspectiva de \textcite{schesch2024evaluation}, que prioriza a integridade semântica do software resultante.
-      
-      Conforme apontado por \textcite{schesch2024evaluation}, a literatura anterior sofre com metodologias que apresentam falhas significativas, listadas a seguir:
-      \begin{enumerate}
-          \item \textbf{Falta de Distinção da Correção:} A maioria das avaliações existentes mede o sucesso de uma ferramenta apenas pela sua capacidade de produzir um \textit{merge} limpo (sem conflitos), tratando todos os \textit{merges} limpos como igualmente bem-sucedidos. No entanto, um \textit{merge} limpo pode ser incorreto, ou seja, pode introduzir um erro de compilação ou um defeito de comportamento que só será detectado posteriormente.
-          \item \textbf{Dados Pouco Representativos:} Muitas avaliações utilizam cenários de \textit{merge} sintéticos ou coletados apenas da branch principal dos repositórios, o que não reflete a variedade e a complexidade dos \textit{merges} que ocorrem em branches de desenvolvimento, que são frequentemente deletadas após o a conclusão do processo.
-          \item \textbf{"Verdade Fundamental" Questionável:} Alguns estudos comparam o resultado da ferramenta com a versão final do código \textit{commitada} pelo desenvolvedor. Contudo, se o próprio desenvolvedor utilizou uma ferramenta de \textit{merge} imperfeita para gerar essa versão, o estudo pode acabar penalizando uma ferramenta mais correta.
-      \end{enumerate}
+    Tão importante quanto desenvolver novas ferramentas é a capacidade de avaliá-las de forma justa e realista. Enquanto o desenvolvimento do SESAME foca na eficiência da resolução de conflitos, a sua validação necessita de um critério de aceitação mais rigoroso do que a mera contagem de linhas. Adota-se, portanto, a perspectiva de \textcite{schesch2024evaluation}, que prioriza a integridade semântica do software resultante.
     
-      Para superar essas limitações, uma metodologia de avaliação mais rigorosa foi proposta. Ela se baseia na execução de suítes de teste automatizadas como um proxy para a verificação da correção do \textit{merge}. Assim, um \textit{merge} limpo é classificado como correto se todos os testes passarem, e incorreto se algum teste falhar. Adicionalmente, a metodologia introduz uma métrica de "Redução de Esforço", que leva em conta o custo relativo (k) de um \textit{merge} incorreto, partindo da premissa de que consertar um bug silencioso é significativamente mais caro do que resolver um conflito de \textit{merge} explícito.
+    Conforme apontado por \textcite{schesch2024evaluation}, a literatura anterior sofre com metodologias que apresentam falhas significativas, listadas a seguir:
+    \begin{enumerate}
+        \item \textbf{Falta de Distinção da Correção:} A maioria das avaliações existentes mede o sucesso de uma ferramenta apenas pela sua capacidade de produzir um \textit{merge} limpo (sem conflitos), tratando todos os \textit{merges} limpos como igualmente bem-sucedidos. No entanto, um \textit{merge} limpo pode ser incorreto, ou seja, pode introduzir um erro de compilação ou um defeito de comportamento que só será detectado posteriormente.
+        \item \textbf{Dados Pouco Representativos:} Muitas avaliações utilizam cenários de \textit{merge} sintéticos ou coletados apenas da branch principal dos repositórios, o que não reflete a variedade e a complexidade dos \textit{merges} que ocorrem em branches de desenvolvimento, que são frequentemente deletadas após o a conclusão do processo.
+        \item \textbf{"Verdade Fundamental" Questionável:} Alguns estudos comparam o resultado da ferramenta com a versão final do código \textit{commitada} pelo desenvolvedor. Contudo, se o próprio desenvolvedor utilizou uma ferramenta de \textit{merge} imperfeita para gerar essa versão, o estudo pode acabar penalizando uma ferramenta mais correta.
+    \end{enumerate}
+
+    Para superar essas limitações, uma metodologia de avaliação mais rigorosa foi proposta. Ela se baseia na execução de suítes de teste automatizadas como um proxy para a verificação da correção do \textit{merge}. Assim, um \textit{merge} limpo é classificado como correto se todos os testes passarem, e incorreto se algum teste falhar. Adicionalmente, a metodologia introduz uma métrica de "Redução de Esforço", que leva em conta o custo relativo (k) de um \textit{merge} incorreto, partindo da premissa de que consertar um bug silencioso é significativamente mais caro do que resolver um conflito de \textit{merge} explícito.
+
+    \subsection{Replicação na Engenharia de Software}
+    A replicação é um componente essencial do método científico, permitindo que a comunidade verifique se resultados empíricos são consistentes e generalizáveis para além do contexto de um único estudo. Segundo \textcite{carver2014replications}, a replicação pode ser definida como a repetição deliberada de um estudo empírico com o objetivo de determinar se os resultados originais podem ser reproduzidos. Sem a replicação, observações isoladas podem ser fruto do acaso ou de condições específicas irreprodutíveis, impedindo a consolidação do conhecimento na área.
+
+    Na Engenharia de Software, as replicações podem ser classificadas em diferentes tipos, dependendo do grau de fidelidade ao estudo original. \textcite{shull2008role} distinguem entre replicações exatas, onde se busca seguir os procedimentos originais o mais fielmente possível, e replicações conceituais, que buscam responder à mesma questão de pesquisa utilizando métodos diferentes . \textcite{mantyla2010rethinking} expandem essa visão, discutindo as replicações diferenciadas, onde variações deliberadas são introduzidas nas variáveis do experimento, como a alteração da população estudada ou das ferramentas avaliadas, para testar a robustez das teorias.
+
+    Este trabalho classifica-se como uma replicação diferenciada do estudo conduzido por \textcite{schesch2024evaluation}. Adota-se, de forma rigorosa, a mesma infraestrutura experimental, bem como as mesmas métricas de avaliação (correção via suítes de teste) e critérios de sucesso do estudo original. A diferenciação principal reside na introdução de uma nova variável independente: a ferramenta de \textit{merge} SESAME. Desta forma, o estudo não apenas valida a metodologia proposta por \textcite{schesch2024evaluation}, mas também estende o corpo de conhecimento ao avaliar o comportamento de uma nova abordagem semi-estruturada frente aos \textit{baselines} da literatura.
+
+    \subsection{Síntese e Lacuna na Literatura}
+    A literatura apresenta um campo de pesquisa ativo, com um espectro de ferramentas de \textit{merge} que buscam equilibrar simplicidade, desempenho e precisão. Ao mesmo tempo, emerge um consenso sobre a necessidade de metodologias de avaliação mais robustas, que considerem a correção do código resultante como a principal métrica de sucesso.
     
-      \subsection{Replicação na Engenharia de Software}
-      A replicação é um componente essencial do método científico, permitindo que a comunidade verifique se resultados empíricos são consistentes e generalizáveis para além do contexto de um único estudo. Segundo \textcite{carver2014replications}, a replicação pode ser definida como a repetição deliberada de um estudo empírico com o objetivo de determinar se os resultados originais podem ser reproduzidos. Sem a replicação, observações isoladas podem ser fruto do acaso ou de condições específicas irreprodutíveis, impedindo a consolidação do conhecimento na área.
-
-      Na Engenharia de Software, as replicações podem ser classificadas em diferentes tipos, dependendo do grau de fidelidade ao estudo original. \textcite{shull2008role} distinguem entre replicações exatas, onde se busca seguir os procedimentos originais o mais fielmente possível, e replicações conceituais, que buscam responder à mesma questão de pesquisa utilizando métodos diferentes . \textcite{mantyla2010rethinking} expandem essa visão, discutindo as replicações diferenciadas, onde variações deliberadas são introduzidas nas variáveis do experimento, como a alteração da população estudada ou das ferramentas avaliadas, para testar a robustez das teorias.
-
-      Este trabalho classifica-se como uma replicação diferenciada do estudo conduzido por \textcite{schesch2024evaluation}. Adota-se, de forma rigorosa, a mesma infraestrutura experimental, bem como as mesmas métricas de avaliação (correção via suítes de teste) e critérios de sucesso do estudo original. A diferenciação principal reside na introdução de uma nova variável independente: a ferramenta de \textit{merge} SESAME. Desta forma, o estudo não apenas valida a metodologia proposta por \textcite{schesch2024evaluation}, mas também estende o corpo de conhecimento ao avaliar o comportamento de uma nova abordagem semi-estruturada frente aos \textit{baselines} da literatura.
-
-      \subsection{Síntese e Lacuna na Literatura}
-      A literatura apresenta um campo de pesquisa ativo, com um espectro de ferramentas de \textit{merge} que buscam equilibrar simplicidade, desempenho e precisão. Ao mesmo tempo, emerge um consenso sobre a necessidade de metodologias de avaliação mais robustas, que considerem a correção do código resultante como a principal métrica de sucesso.
-      
-      Neste ponto, identifica-se uma clara lacuna: a ferramenta inovadora \textbf{SESAME}, com sua abordagem única baseada em separadores sintáticos, foi avaliada em seu trabalho original  antes da consolidação desta metodologia de avaliação mais sofisticada. Portanto, seu desempenho em termos de correção, sua taxa de geração de \textit{merges} incorretos e sua posição em comparação com o estado da arte (ferramentas como Spork, IVn, etc.) sob esta ótica mais rigorosa, são desconhecidas. 
-      Este trabalho preenche essa lacuna ao executar o protocolo de \textcite{schesch2024evaluation} sobre o SESAME, permitindo uma comparação direta de \textit{Effort Reduction} com as ferramentas estado da arte.
+    Neste ponto, identifica-se uma clara lacuna: a ferramenta inovadora \textbf{SESAME}, com sua abordagem única baseada em separadores sintáticos, foi avaliada em seu trabalho original  antes da consolidação desta metodologia de avaliação mais sofisticada. Portanto, seu desempenho em termos de correção, sua taxa de geração de \textit{merges} incorretos e sua posição em comparação com o estado da arte (ferramentas como Spork, IVn, etc.) sob esta ótica mais rigorosa, são desconhecidas. 
+    Este trabalho preenche essa lacuna ao executar o protocolo de \textcite{schesch2024evaluation} sobre o SESAME, permitindo uma comparação direta de \textit{Effort Reduction} com as ferramentas estado da arte.
 
 \section{Metodologia}
     \subsection{Desenho do Estudo}
