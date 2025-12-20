@@ -15,9 +15,12 @@ Este trabalho é composto por múltiplos componentes distribuídos nos seguintes
 
 2.  **Este Repositório (`tcc-avaliacao-sesame`)**
     * Contém o documento final do TCC, que descreve a execução dos experimentos e a análise dos resultados.
-
-3.  **[Framework de Avaliação (Contribuição Prática)](https://github.com/benedikt-schesch/AST-Merging-Evaluation)**
-    * Repositório principal onde a implementação prática e as contribuições de código para a avaliação da ferramenta SESAME são realizadas.
+      
+3.  **[Framework de Avaliação Incrementado](https://github.com/davidalmd/AST-Merging-Evaluation-TCC)**
+    * Repositório pessoal onde a implementação prática e as contribuições de código para a avaliação da ferramenta SESAME são realizadas.
+      
+4.  **[Framework de Avaliação Original](https://github.com/benedikt-schesch/AST-Merging-Evaluation)**
+    * Repositório principal onde encontra-se a ferramenta de avaliação oficial e original utilizada nesse trabalho de conclusão de curso.
 
 ---
 
