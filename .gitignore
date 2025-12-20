@@ -5,7 +5,7 @@
 # PRODUTO FINAL
 # Ignoramos o PDF final. Ele é um produto da compilação, não um arquivo-fonte.
 # Isso mantém o repositório leve e evita conflitos de merge.
-*.pdf
+/*.pdf
 
 
 # ARQUIVOS AUXILIARES DE COMPILAÇÃO
