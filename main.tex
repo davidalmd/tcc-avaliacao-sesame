@@ -84,104 +84,147 @@
     
     Para ilustrar o funcionamento, considere o mecanismo de inferência de estrutura. Conforme detalhado por \textcite{cavalcanti2024semistructured}, o processo segue três etapas principais:
     \begin{itemize}
-    \item \textbf{Pré-processamento:} A ferramenta insere quebras de linha e marcadores especiais (placeholders) antes e depois de cada separador sintático (como \{ ou ;). Isso isola os blocos lógicos em linhas distintas.
+    \item \textbf{Pré-processamento:} A ferramenta insere quebras de linha e marcadores especiais (placeholders) antes e depois de cada separador sintático. Isso isola os blocos lógicos em linhas distintas.
     \item \textbf{Merge Textual:} Uma ferramenta não estruturada (diff3) é executada sobre esse código transformado. Como os blocos agora estão em linhas diferentes, o algoritmo textual consegue distinguir mudanças que antes colidiriam na mesma linha.
     \item \textbf{Pós-processamento}: Os marcadores e quebras de linha artificiais são removidos, restaurando o código original com o \textit{merge}.
     \end{itemize}
     
     \subsection{Exemplo Prático de Comportamento das Ferramentas}
-    Para ilustrar as diferenças fundamentais entre as abordagens avaliadas, apresenta-se um cenário comum de desenvolvimento: a adição concorrente de dois métodos independentes na mesma região de uma classe Java.
+    Para demonstrar a capacidade das ferramentas em resolver conflitos granulares, utiliza-se um cenário que envolve modificações simultâneas na definição de um laço de repetição (\textit{loop}) e a adição de novos métodos.
 
-    A Figura \ref{fig:cenario_input} apresenta o cenário de entrada: a versão Base (vazia) e as alterações realizadas nos ramos \textit{Left} (adição do método \texttt{sum}) e \textit{Right} (adição do método \texttt{sub}).
+    A Figura \ref{fig:cenario_input} apresenta o estado inicial:
+    \begin{itemize}
+        \item \textbf{Base:} Método \texttt{iterar} padrão.
+        \item \textbf{Left:} Altera o início do laço (\texttt{i=1}) e adiciona o método \texttt{subtrair}.
+        \item \textbf{Right:} Altera o fim do laço (\texttt{i<11}) e adiciona o método \texttt{multiplicar}.
+    \end{itemize}
 
     \begin{figure}[ht]
         \centering
-        % Left
-        \begin{minipage}{0.3\textwidth}
-            \centering
-            \textbf{Left (Local)}
-            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single]
-class MathUtils {
-    int sum(int a, int b) {
-        return a + b;
+        % Base
+        \begin{minipage}{0.55\textwidth}
+        \centering
+            \textbf{Base}
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single, breaklines=true]
+public class Teste {
+    public void iterar() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println("Iteração: " + i);
+        }
     }
 }
             \end{lstlisting}
         \end{minipage}
-        \hfill
-        % Base
-        \begin{minipage}{0.28\textwidth}
+        \vspace{0.5cm}
+        % Left
+        \begin{minipage}{0.45\textwidth}
             \centering
-            \textbf{Base}
-            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single]
-class MathUtils {
-    // Classe vazia
-}
-            \end{lstlisting}
-        \end{minipage}
-        \hfill
-        % Right
-        \begin{minipage}{0.3\textwidth}
-            \centering
-            \textbf{Right (Remoto)}
-            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single]
-class MathUtils {
-    int sub(int a, int b) {
+            \textbf{Left (Local)}
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single, breaklines=true]
+public class Teste {
+    public void iterar() {
+        for (int i = 1; i < 10; i++) {
+            System.out.println("Iteração: " + i);
+        }
+    }
+    public int subtrair(int a, int b) {
         return a - b;
     }
 }
             \end{lstlisting}
         \end{minipage}
-        \caption{Cenário de \textit{merge}: adição independente de métodos no mesmo local físico do arquivo.}
+        \hspace{0.5cm}
+        % Right
+        \begin{minipage}{0.45\textwidth}
+            \centering
+            \textbf{Right (Remoto)}
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single, breaklines=true]
+public class Teste {
+    public void iterar() {
+        for (int i = 0; i < 11; i++) {
+            System.out.println("Iteração: " + i);
+        }
+    }
+    public int multiplicar(int a, int b) {
+        return a * b;
+    }
+}
+            \end{lstlisting}
+        \end{minipage}
+        \caption{Cenário de \textit{merge}: modificações concorrentes na mesma linha do \texttt{for} e adição simultânea de métodos distintos.}
         \label{fig:cenario_input}
     \end{figure}
 
     A seguir, demonstra-se como cada categoria de ferramenta processa este cenário.
 
     \subsubsection{Merge Textual (Git Merge)}
-    O Git Merge (não estruturado) trata o arquivo como uma sequência de linhas. Como ambas as modificações ocorreram no mesmo ponto de inserção (dentro das chaves da classe), a ferramenta não consegue determinar a ordem correta e reporta um conflito, exigindo intervenção manual (Figura \ref{fig:resultado_git}).
+    O Git Merge (não estruturado) trata o arquivo como uma sequência de linhas. Como existem modificações que ocorreram no mesmo ponto de inserção nos dois lados, a ferramenta não consegue determinar a ordem correta e reporta um conflito, exigindo intervenção manual (Figura \ref{fig:resultado_git}).
 
     \begin{figure}[ht]
+    \centering
+    \begin{minipage}{0.75\textwidth} % Aumentei a largura para caber tudo bem
         \centering
-        \begin{minipage}{0.8\textwidth}
-            \centering
-            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\small, frame=single, keywordstyle=\color{blue}]
- class MathUtils {
- <<<<<<< HEAD
-     int sum(int a, int b) {
-         return a + b;
-     }
- =======
-     int sub(int a, int b) {
-         return a - b;
-     }
- >>>>>>> branch-right
- }
-            \end{lstlisting}
-        \end{minipage}
-        \caption{Resultado do Git Merge: conflito textual reportado devido à sobreposição de linhas.}
-        \label{fig:resultado_git}
+        \begin{lstlisting}[language=Java, basicstyle=\ttfamily\scriptsize, frame=single, keywordstyle=\color{blue}, breaklines=true, escapechar=!]
+public class Teste {
+
+    public void iterar() {
+!\textcolor{red}{\textbf{<<<<<<< HEAD}}!
+        for (int i = 1; i < 10; i++) {
+!\textcolor{red}{\textbf{=======}}!
+        for (int i = 0; i < 11; i++) {
+!\textcolor{red}{\textbf{>>>>>>> branch-right}}!
+            System.out.println("Iteração: " + i);
+        }
+    }
+
+!\textcolor{red}{\textbf{<<<<<<< HEAD}}!
+    public int subtrair(int a, int b) {
+        return a - b;
+    }
+!\textcolor{red}{\textbf{=======}}!
+    public int multiplicar(int a, int b) {
+        return a * b;
+    }
+!\textcolor{red}{\textbf{>>>>>>> branch-right}}!
+}
+        \end{lstlisting}
+    \end{minipage}
+    \caption{Falha dupla do Git Merge. Ocorre um conflito intra-linha na definição do laço \texttt{for} e um conflito de inserção no final da classe, onde a ferramenta não consegue determinar a ordem de inclusão dos novos métodos \texttt{subtrair} e \texttt{multiplicar}.}
+    \label{fig:resultado_git}
     \end{figure}
 
     \subsubsection{Merge Estruturado (Spork)}
-    O Spork (estruturado) constrói a Árvore Sintática Abstrata (AST) do código. Ele identifica que \texttt{sum} e \texttt{sub} são declarações de métodos distintos adicionadas ao nó da classe \texttt{MathUtils}. Como a ordem de métodos não afeta a semântica em Java, a ferramenta realiza a fusão automaticamente, produzindo um \textit{merge} limpo e correto (Figura \ref{fig:resultado_spork_sesame}).
+    O Spork (es\-tru\-tu\-ra\-do) transcende a visão textual ao construir a Árvore Sintática Abstrata (AST). Ele identifica que as mo\-di\-fi\-ca\-ções no laço \texttt{for}, embora ocupem a mesma linha física, referem-se a nós filhos distintos dentro da estrutura do \texttt{For\-State\-ment}: a i\-ni\-ci\-a\-li\-za\-ção (\texttt{For\-Init}) alterada pelo ramo \textit{Left} e a expressão de condição (\texttt{Ex\-pres\-sion}) ajustada pelo ramo \textit{Right}.
+
+    Além disso, ao analisar o escopo da classe \texttt{Teste}, a ferramenta interpreta as inserções ao final do arquivo não como uma colisão de blocos de texto, mas como a adição de dois novos nós \texttt{MethodDeclaration} independentes (\texttt{subtrair} e \texttt{multiplicar}). Isso permite que o Spork realize uma fusão granular das propriedades do laço e, simultaneamente, anexe os novos métodos como irmãos na árvore, resultando em um código válido e sem conflitos (Figura \ref{fig:ast_spork_result}).
 
     \subsubsection{Merge Semi-estruturado (SESAME)}
-    O SESAME (semi-estruturado) utiliza separadores sintáticos (neste caso, as chaves \texttt{\{\}}) para inferir a estrutura. Ao pré-processar o texto inserindo quebras de linha nos separadores, ele isola os blocos de código. Isso permite que o algoritmo textual subjacente distinga as duas inserções como blocos independentes, alcançando o mesmo resultado de sucesso do Spork, mas com menor custo computacional (Figura \ref{fig:resultado_spork_sesame}).
+    O SESAME (semi-estruturado) utiliza separadores sintáticos (‘\texttt{\{}’, ‘\texttt{\}}’, ‘,’, ‘(’, ‘)’ e ‘;’) para inferir a estrutura. Ao pré-processar o texto inserindo quebras de linha nos separadores, ele isola os blocos de código. Isso permite que o algoritmo textual subjacente distinga as duas inserções como blocos independentes, alcançando o mesmo resultado de sucesso do Spork, mas com menor custo computacional (Figura \ref{fig:resultado_spork_sesame}).
 
-    \begin{figure}[ht]
+    \begin{figure}[H]
         \centering
-        \begin{lstlisting}[language=Java, basicstyle=\ttfamily\small, frame=single, keywordstyle=\color{blue}]
-class MathUtils {
-    int sum(int a, int b) {
-        return a + b;
+        \begin{minipage}{0.75\textwidth}
+            \centering
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\small, frame=single, keywordstyle=\color{blue}]
+public class Teste {
+
+    public void iterar() {
+        for (int i = 1; i < 11; i++) {
+            System.out.println("Iteração: " + i);
+        }
     }
 
-    int sub(int a, int b) {
+    public int subtrair(int a, int b) {
         return a - b;
     }
+
+    public int multiplicar(int a, int b) {
+        return a * b;
+    }
+    
 }
-        \end{lstlisting}
+            \end{lstlisting}
+        \end{minipage}
         \caption{Resultado obtido tanto pelo Spork quanto pelo SESAME: fusão automática bem-sucedida (Clean Merge).}
         \label{fig:resultado_spork_sesame}
     \end{figure}
@@ -190,72 +233,146 @@ class MathUtils {
 
     Para compreender por que o resultado difere, é necessário observar a representação interna que cada ferramenta constrói a partir do código fonte.
 
-    \subsubsection{Representação em Árvore (Estruturado/Spork)}
-    Enquanto o Git vê apenas texto, o Spork converte o código numa Árvore Sintática Abstrata (AST). A Figura \ref{fig:ast_example} ilustra como a ferramenta "enxerga" a classe \texttt{MathUtils}. O conflito desaparece porque a adição do método \texttt{sum} (Left) e \texttt{sub} (Right) ocorre como novos nós filhos do nó \texttt{ClassDeclaration}, e não como linhas sobrepostas.
+    \subsubsection{Representação em Árvore (Estruturado)}
+    Enquanto o Git opera cegamente sobre linhas de texto, o Spork converte o código em uma Árvore Sintática Abstrata (AST). A Figura \ref{fig:ast_spork_result} ilustra a hierarquia estrutural interpretada pela ferramenta. 
+
+    O conflito é mitigado porque o Spork não enxerga uma colisão de caracteres na linha do laço, mas sim alterações em nós filhos distintos do \texttt{ForStatement}: a inicialização (\texttt{ForInit}) vinda do \textit{Left} e a condição de parada (\texttt{Expression}) vinda do \textit{Right}. Simultaneamente, a ferramenta compreende que os métodos \texttt{subtrair} e \texttt{multiplicar} são novos nós independentes que devem ser anexados ao nó pai \texttt{ClassDeclaration}, permitindo a reconciliação completa da estrutura.
 
     \begin{figure}[ht]
-        \centering
-        \begin{tikzpicture}[
-            level distance=2.5cm,
-            level 1/.style={sibling distance=5.5cm},
-            level 2/.style={sibling distance=5.5cm},
-            every node/.style = {shape=rectangle, rounded corners,
-                draw, align=center,
-                top color=white, bottom color=blue!20}]
-                
-        \node {ClassDeclaration \\ \textbf{"MathUtils"}}
-            child { node {MethodDeclaration \\ \textbf{"sum"} \\ (Vindo de Left)} }
-            child { node {MethodDeclaration \\ \textbf{"sub"} \\ (Vindo de Right)} };
-        \end{tikzpicture}
-        \caption{Representação simplificada da AST gerada por ferramentas estruturadas. As alterações são nós independentes na árvore, eliminando o conflito textual.}
-        \label{fig:ast_example}
+    \centering
+    \begin{tikzpicture}[
+        level distance=1.5cm,
+        level 1/.style={sibling distance=3.5cm},
+        level 2/.style={sibling distance=3cm},
+        level 3/.style={sibling distance=2.5cm},
+        every node/.style = {
+            shape=rectangle, 
+            rounded corners,
+            draw, 
+            align=center,
+            font=\sffamily\scriptsize,
+            top color=white, 
+            bottom color=blue!20
+        },
+        edge from parent/.style={draw, -latex}
+    ]
+            
+    % RAIZ
+    \node {ClassDeclaration \\ \textbf{Teste}}
+        % FILHO 1
+        child { 
+            node {MethodDeclaration \\ \textbf{iterar}} 
+            child {
+                node {ForStatement}
+                child { node {ForInit \\ \texttt{int i = 1} \\ \textbf{(Vindo do Left)}} }
+                child { node {Expression \\ \texttt{i < 11} \\ \textbf{(Vindo do Right)}} }
+            }
+        }
+        % FILHO 2
+        child { 
+            node {MethodDeclaration \\ \textbf{subtrair} \\ \textbf{(Adicionado pelo Left)}} 
+        }
+        % FILHO 3
+        child { 
+            node {MethodDeclaration \\ \textbf{multiplicar} \\ \textbf{(Adicionado pelo Right)}} 
+        };
+    \end{tikzpicture}
+    \caption{Árvore Sintática Abstrata (AST) resultante do Spork.}
+    \label{fig:ast_spork_result}
     \end{figure}
 
     \subsubsection{Representação com Separadores (SESAME)}
-    O SESAME não constrói a árvore completa, mas "engana" o algoritmo textual inserindo marcadores artificiais. A Figura \ref{fig:sesame_intermediate} demonstra o estado intermediário do arquivo (Pós-processamento) antes da fusão.
+    O SESAME não constrói a árvore completa, mas transforma o arquivo inserindo marcadores artificiais ao redor de separadores sintáticos específicos: \textbf{\{ \}, ( ), ; e ,} \parencite{cavalcanti2024semistructured}.
 
-    Observe os marcadores \texttt{\$\$\$\$\$\$} inseridos nos separadores \texttt{\{} e \texttt{\}}. Eles forçam o algoritmo textual a tratar as chaves e os corpos dos métodos como blocos distantes, permitindo que o \textit{diff3} insira ambos sem conflito.
+    A Figura \ref{fig:sesame_intermediate} demonstra como as linhas de código são "explodida" verticalmente. Observe como os parênteses, vírgulas e pontos-e-vírgulas são isolados por marcadores \texttt{\$\$\$\$\$\$}. Isso permite que o algoritmo de \textit{diff} alinhe a estrutura do código mesmo se houver mudanças em linhas adjacentes.
 
-    % --- CÓDIGO DO SESAME COM $$$$$$ ---
     \begin{figure}[ht]
         \centering
         % Left
-        \begin{minipage}{0.45\textwidth}
+        \begin{minipage}{0.48\textwidth}
             \centering
             \textbf{Left (Transformado)}
-            \begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single, backgroundcolor=\color{yellow!10}, showstringspaces=false]
-class MathUtils
-$$$$$$ {
-$$$$$$
-    int sum(int a, int b)
-    $$$$$$ {
-    $$$$$$
-        return a + b;
-    $$$$$$ }
-$$$$$$ }
+            % Usando \tiny para caber a "explosão" vertical do código
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\tiny, frame=single, backgroundcolor=\color{yellow!10}, showstringspaces=false, breaklines=true, keywordstyle=\color{blue}]
+public class Teste 
+$$$$$${
+    public void iterar
+    $$$$$$(
+    $$$$$$) 
+$$$$$${
+        for 
+        $$$$$$(
+        $$$$$$int i = 1
+        $$$$$$;
+        $$$$$$i < 10
+        $$$$$$; 
+        $$$$$$i++
+        $$$$$$) 
+        $$$$$${
+            System.out.println
+            $$$$$$(
+                $$$$$$"Iteração: " + i
+            $$$$$$)
+            $$$$$$;
+        $$$$$$}
+$$$$$$}
+    public int subtrair
+    $$$$$$(int a
+    $$$$$$, 
+    $$$$$$int b
+    $$$$$$) 
+    $$$$$${
+        return a - b
+        $$$$$$;
+    $$$$$$}
+$$$$$$}
             \end{lstlisting}
         \end{minipage}
         \hfill
         % Right
-        \begin{minipage}{0.45\textwidth}
+        \begin{minipage}{0.48\textwidth}
             \centering
             \textbf{Right (Transformado)}
-            \begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single, backgroundcolor=\color{yellow!10}, showstringspaces=false]
-class MathUtils
-$$$$$$ {
-$$$$$$
-    int sub(int a, int b)
-    $$$$$$ {
-    $$$$$$
-        return a - b;
-    $$$$$$ }
-$$$$$$ }
+            \begin{lstlisting}[language=Java, basicstyle=\ttfamily\tiny, frame=single, backgroundcolor=\color{yellow!10}, showstringspaces=false, breaklines=true, keywordstyle=\color{blue}]
+public class Teste 
+$$$$$${
+    public void iterar
+    $$$$$$(
+    $$$$$$) 
+$$$$$${
+        for 
+        $$$$$$(
+        $$$$$$int i = 0
+        $$$$$$;
+        $$$$$$i < 11
+        $$$$$$; 
+        $$$$$$i++
+        $$$$$$) 
+        $$$$$${
+            System.out.println
+            $$$$$$(
+                $$$$$$"Iteração: " + i
+            $$$$$$)
+            $$$$$$;
+        $$$$$$}
+$$$$$$}
+    public int multiplicar
+    $$$$$$(int a
+    $$$$$$, 
+    $$$$$$int b
+    $$$$$$) 
+    $$$$$${
+        return a * b
+        $$$$$$;
+    $$$$$$}
+$$$$$$}
             \end{lstlisting}
         \end{minipage}
-        \caption{Visualização do mecanismo do SESAME: inserção de quebras de linha e \textit{placeholders} (\texttt{\$\$\$}) nos separadores sintáticos para isolar os blocos de código.}
+        \caption{Visualização detalhada do SESAME: inserção de quebras e marcadores (\texttt{\$\$\$}) nos separadores sintáticos configurados, isolando cada elemento estrutural.}
         \label{fig:sesame_intermediate}
     \end{figure}
 
+    \FloatBarrier
     \subsection{O Desafio de Avaliar Ferramentas de \textit{Merge}}
     Tão importante quanto desenvolver novas ferramentas é a capacidade de avaliá-las de forma justa e realista. Enquanto o desenvolvimento do SESAME foca na eficiência da resolução de conflitos, a sua validação necessita de um critério de aceitação mais rigoroso do que a mera contagem de linhas. Adota-se, portanto, a perspectiva de \textcite{schesch2024evaluation}, que prioriza a integridade semântica do software resultante.
     
@@ -303,12 +420,40 @@ $$$$$$ }
     \end{enumerate}
 
     \subsection{Procedimento Experimental e Execução de Testes}
-    O experimento foi configurado para executar as duas variantes da ferramenta (sesame e sesame\_plus) sobre o \textit{dataset} selecionado. O fluxo de execução para cada cenário de \textit{merge} obedeceu aos seguintes passos:
+    A execução do experimento seguiu a infraestrutura de orquestração disponibilizada pelo estudo original. O processo não se resume a uma única etapa de processamento, mas constitui um fluxo de trabalho composto por sete estágios sequenciais. Esse \textit{pipeline} foi mantido integralmente nesta replicação para assegurar a comparabilidade dos dados, o isolamento de falhas e a fidelidade à metodologia de referência. Abaixo, descreve-se o fluxo de dados e os módulos de \textit{script} responsáveis por cada fase:
+
     \begin{enumerate}
-        \item \textbf{Checkout e Preparação:} O framework realiza o checkout forçado da versão local (branch1) e configura o estilo de conflito do Git para diff3.
-        \item \textbf{Execução do Merge:} O script correspondente (sesame.sh ou sesame\_plus.sh) é invocado. No caso do sesame\_plus, se o SESAME deixar conflitos, o Plume-lib é acionado com a estratégia \textit{merge}-plumelib para tentar resolvê-los automaticamente.
-        \item \textbf{Verificação de Sucesso:} O script verifica o código de retorno. Se for diferente de 0 ou se o Git ainda reportar arquivos com marcadores de conflito (diff-filter=U), o \textit{merge} é classificado como Não Tratado (Unhandled).
-        \item \textbf{Validação de Corretude:} Se o \textit{merge} for reportado como limpo (código de retorno 0), inicia-se a fase de compilação e testes (conforme detalhado na seção 3.5).
+        \item \textbf{Inicialização e Rastreabilidade}:
+        A etapa inicial congela o estado dos repositórios analisados. O \textit{script} registra os \textit{hashes} exatos dos \textit{commits} (HEADs) de cada projeto no momento da execução. Esse procedimento assegura a rastreabilidade total do experimento, garantindo que qualquer tentativa futura de replicação utilize exatamente as mesmas versões do código-fonte, eliminando divergências causadas por atualizações nos repositórios remotos.
+
+        \item \textbf{Validação de Sanidade}:
+        Para mitigar ameaças à validade interna, o \textit{pipeline} realiza uma pré-validação dos pais do \textit{merge}. Antes de tentar qualquer fusão, o sistema executa a suíte de testes nos \textit{commits} originais (\textit{Left} e \textit{Right}). Apenas os cenários onde os pais passam nos testes (\textit{Tests\_passed}) são mantidos. Repositórios instáveis ou com falhas pré-existentes são descartados nesta etapa, garantindo que falhas observadas posteriormente sejam causadas exclusivamente pelo processo de \textit{merge} e não por defeitos anteriores.
+
+        \item \textbf{Mineração e Amostragem}:
+        O componente Java \texttt{FindMergeCommits} varre o histórico do Git para identificar cenários de \textit{merge} candidatos. Na sequência, o módulo de amostragem aplica critérios de filtragem rigorosos (como a exclusão de \textit{merges} triviais ou sem alterações de código). Com base no parâmetro de configuração $n\_merges$, o sistema seleciona a amostra final — seja o \textit{dataset} completo ou um subconjunto estatisticamente representativo.
+
+        \item \textbf{Análise Estática Prévia}:
+        Antes da execução das ferramentas, realiza-se uma caracterização dos cenários selecionados. Este módulo coleta métricas sobre a complexidade dos conflitos, número de arquivos envolvidos e linhas de código impactadas, preparando o terreno para correlacionar essas características com o sucesso ou falha das ferramentas posteriormente.
+
+        \item \textbf{Execução e Teste de Corretude}:
+        Este é o núcleo do processamento experimental. O \textit{script} itera sobre cada cenário de \textit{merge}, isola o ambiente e invoca a ferramenta alvo (SESAME, Spork ou Git, por exemplo). Após a tentativa de fusão, o sistema tenta compilar e executar a bateria de testes do projeto resultante. O estado final é capturado e classificado em categorias discretas: Sucesso, Falha de Compilação, Falha de Teste ou Conflito Não Resolvido.
+
+        \item \textbf{Medição de Desempenho}:
+        Executada sobre o \textit{dataset} de controle, esta etapa foca na coleta de métricas temporais. O \textit{pipeline} reexecuta os \textit{merges} instrumentando tanto o tempo de CPU quanto o tempo total (\textit{wall-clock}). Para assegurar precisão estatística e mitigar ruídos causados pelo ``aquecimento'' da JVM (\textit{warm-up}) ou cache de disco, cada cenário é executado múltiplas vezes, calculando-se a média aritmética dos tempos válidos.
+
+        \item \textbf{Consolidação de Resultados}:
+        A etapa final agrega os \textit{logs} brutos e arquivos CSV gerados por todas as fases anteriores. O módulo processa estatisticamente os dados, calculando taxas de acerto (\textit{Recall}) e médias de tempo, e gera automaticamente os artefatos visuais (tabelas e gráficos em formato \LaTeX/PGF) apresentados neste trabalho, eliminando erros de transcrição manual.
+    \end{enumerate}
+
+    Essa abordagem em estágios garante que a avaliação dos algoritmos de \textit{merge} ocorra sobre dados limpos e verificados, isolando variáveis de confusão e assegurando a robustez das conclusões apresentadas.
+
+    \subsubsection{Protocolo de Invocação das Ferramentas}
+    Para cada cenário de \textit{merge} processado pelo estágio de execução (passo 5 acima), o protocolo de invocação das variantes (SESAME e SESAME+) obedece a um fluxo rigoroso de verificação:
+    \begin{enumerate}
+        \item \textbf{Checkout e Preparação:} O \textit{framework} realiza o \textit{checkout} forçado da versão local (\textit{branch1}) e configura o estilo de conflito do Git para \texttt{diff3}, garantindo que os marcadores de conflito contenham a informação do ancestral comum.
+        \item \textbf{Execução do Merge:} O \textit{script wrapper} cor\-res\-pon\-den\-te (\texttt{se\-sa\-me.sh} ou \texttt{se\-sa\-me\_plus.sh}) é invocado. No caso do \textbf{SESAME+}, implementou-se uma lógica de contingência: se o SESAME padrão deixar conflitos não resolvidos, a biblioteca \textit{Plume-lib} é acionada imediatamente com a estratégia \texttt{merge-plumelib} na tentativa de resolver as seções restantes automaticamente.
+        \item \textbf{Verificação de Sucesso:} O sistema verifica o código de retorno da ferramenta. Se for diferente de 0 ou se o Git ainda reportar arquivos com marcadores de conflito (\texttt{diff-filter=U}), o \textit{merge} é classificado como \textbf{Não Tratado (Unhandled)}.
+        \item \textbf{Validação de Corretude:} Apenas se o \textit{merge} for reportado como limpo (código de retorno 0), o fluxo avança para a fase de compilação e execução da suíte de testes.
     \end{enumerate}
 
     \subsection{Métricas de Avaliação}
@@ -331,72 +476,100 @@ $$$$$$ }
     \end{itemize}
     
 \section{Resultados}
-    Nesta sessão, apresentam-se os dados obtidos a partir da execução experimental da ferramenta SESAME, contrastados com as ferramentas de referência (\textit{baselines}) definidas no estudo original de \cite{schesch2024evaluation}.
+    Nesta sessão, apresentam-se os dados obtidos a partir da execução experimental da ferramenta SESAME, contrastados com as ferramentas de referência (\textit{baselines}) definidas no estudo original de \cite{schesch2024evaluation} e o estado da arte em \textit{merge} estruturado.
 
-    Os resultados são analisados sob três perspectivas principais: a capacidade de redução de conflitos textuais, a taxa de introdução de erros silenciosos (corretude) e a métrica composta de Redução de Esforço (\textit{Effort Reduction}).
+    \subsection{Estratégia de Avaliação: Duas Fases Complementares} 
+    Para garantir uma análise que contemple tanto a robustez estatística quanto a precisão de desempenho, a avaliação foi dividida em duas fases metodológicas distintas:
+    \begin{enumerate} 
+        \item \textbf{Fase 1 - Validação de Robustez (Dataset Estendido):} Focada na corretude. Utilizou-se o \textit{dataset} em larga escala para mensurar taxas de acerto e erro sobre milhares de cenários de \textit{merge}. O objetivo desta fase é validar a segurança semântica das ferramentas. 
+        \item \textbf{Fase 2 - Perfilamento de Desempenho (Dataset Controlado):} Focada no custo computacional. Utilizou-se uma amostragem controlada (\textit{Shortcut}), isolada de ruídos de I/O excessivos, para medir com precisão o tempo de processamento (CPU e \textit{Wall-clock}). 
+    \end{enumerate}
+    
+    Essa abordagem híbrida permite isolar variáveis e discutir o \textit{trade-off} entre eficácia (resolver o conflito) e eficiência (custo temporal).
+    
+    \subsection{Visão Geral dos Dados de Corretude}
 
-    \subsection{Visão Geral dos Dados}
+    A Tabela \ref{tab:resultados_gerais} sumariza o desempenho bruto de cada ferramenta sobre o conjunto de dados processados na Fase 1. A partir de um universo inicial de 69.119 candidatos minerados, aplicaram-se filtros de relevância (arquivos Java modificados) e sanidade (pais aprovados nos testes), resultando em um \textit{dataset} final composto por \textbf{5.365} cenários de \textit{merge} amostrados para execução.
+    Observa-se que o \textit{dataset} desafiou significativamente todas as abordagens, com nenhuma ferramenta atingindo 60\% de taxa de sucesso sem intervenção manual.
 
-    A Tabela \ref{tab:resultados_gerais} sumariza o desempenho bruto de cada ferramenta sobre o conjunto de dados processado. O \textit{dataset} final consistiu em \textbf{[INSERIR TOTAL DE CENÁRIOS]} cenários de \textit{merge}.
-
-    % --- TABELA DE RESULTADOS (PREENCHER DEPOIS) ---
     \begin{table}[ht]
     \centering
-    \caption{Desempenho comparativo das ferramentas de \textit{merge}. Os valores indicam o número absoluto e a porcentagem em relação ao total de cenários.}
+    \caption{Desempenho comparativo das ferramentas de \textit{merge} (Fase 1). Dados extraídos da execução experimental. Os valores indicam o número absoluto e a porcentagem em relação ao total de cenários.}
     \label{tab:resultados_gerais}
     \resizebox{\textwidth}{!}{% Ajusta a tabela à largura da página
-    \begin{tabular}{|l|cc|cc|cc|}
-    \hline
-    \textbf{Ferramenta} & \multicolumn{2}{c|}{\textbf{Corretos}} & \multicolumn{2}{c|}{\textbf{Incorretos}} & \multicolumn{2}{c|}{\textbf{Não Tratados (Conflitos)}} \\
-    & \# & \% & \# & \% & \# & \% \\ \hline
-    Git Merge (ort) & [VALOR] & [\%] & [VALOR] & [\%] & [VALOR] & [\%] \\ \hline
-    Spork & [VALOR] & [\%] & [VALOR] & [\%] & [VALOR] & [\%] \\ \hline
-    IntelliMerge & [VALOR] & [\%] & [VALOR] & [\%] & [VALOR] & [\%] \\ \hline
-    \textbf{SESAME} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} \\ \hline
-    \textbf{SESAME + PlumeLib} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} & \textbf{[VALOR]} & \textbf{[\%]} \\ \hline
-    \end{tabular}
+        \begin{tabular}{|l|cc|cc|cc|}
+            \hline
+            \textbf{Ferramenta} & \multicolumn{2}{c|}{\textbf{Corretos}} & \multicolumn{2}{c|}{\textbf{Incorretos}} & \multicolumn{2}{c|}{\textbf{Não Tratados (Conflitos)}} \\
+            & \# & \% & \# & \% & \# & \% \\ \hline
+            Git Merge (ort) & 2450 & 47\% & 92 & 2\% & 2682 & 51\% \\ \hline 
+            Spork & 2889 & 55\% & 558 & 11\% & 1777 & 34\% \\ \hline 
+            IntelliMerge & 446 & 9\% & 3659 & 70\% & 1119 & 21\% \\ \hline 
+            \textbf{SESAME} & \textbf{2461} & \textbf{47\%} & \textbf{174} & \textbf{3\%} & \textbf{2589} & \textbf{50\%} \\ \hline 
+            \textbf{SESAME+} & \textbf{2472} & \textbf{47\%} & \textbf{173} & \textbf{3\%} & \textbf{2579} & \textbf{49\%} \\ \hline
+        \end{tabular}
     }
     \end{table}
 
     \subsection{Análise de Redução de Conflitos}
-    A primeira questão de pesquisa investiga a capacidade da ferramenta em resolver conflitos automaticamente. Observa-se na coluna "Não Tratados" da Tabela \ref{tab:resultados_gerais} que o Git Merge, representando a abordagem textual tradicional, falhou em resolver \textbf{[X]\%} dos cenários.
+    A capacidade de resolver conflitos automaticamente varia drasticamente entre os paradigmas. O Git Merge (ort) falhou em resolver \textbf{51\%} dos cenários (2682 casos).
 
-    O SESAME, ao utilizar a estratégia de separadores sintáticos, obteve uma taxa de conflitos de \textbf{[Y]\%}. Isso representa uma redução de \textbf{[CALCULAR \%]} em relação ao \textit{baseline} textual.
-    % EXPLICAR AQUI: Se o SESAME teve menos conflitos que o Git, destaque isso como vantagem da abordagem semi-estruturada.
-    % Compare também com o Spork: O SESAME chegou perto da redução de conflitos do Spork (estruturado)?
+    As ferramentas puramente estruturadas, como o Spork, demonstraram a maior agressividade na resolução, reduzindo a taxa de conflitos não tratados para \textbf{34\%}. Contudo, essa agressividade tem um custo na corretude, conforme discutido a seguir.
 
-    \subsection{Análise de Corretude}
-    A métrica crítica destacada por \cite{schesch2024evaluation} é a taxa de \textit{merges} incorretos (cenários onde a ferramenta reporta sucesso (fusão limpa)), mas o código resultante falha na compilação ou nos testes.
+    O SESAME, posicionando-se como uma abordagem semi-estruturada, obteve uma taxa de conflitos não tratados de \textbf{50\%} (2589 casos). Embora a redução numérica direta em relação ao Git seja modesta (aproximadamente 3,5\% de redução no número absoluto de conflitos), o SESAME mantém a segurança próxima à do paradigma textual, evitando as distorções estruturais observadas em ferramentas mais complexas.
 
-    Enquanto ferramentas puramente estruturadas como o Spork tenderam a apresentar uma taxa de incorreção de \textbf{[Z]\%}, o SESAME apresentou uma taxa de \textbf{[W]\%}.
-    % ANÁLISE CRÍTICA AQUI:
-    % Cenário Ideal: O SESAME teve MENOS erros incorretos que o Spork. Isso valida a hipótese de que ser "menos agressivo" na estrutura evita quebrar o código.
-    % Cenário Realista: Se o SESAME tiver mais erros que o Git, explique que é o preço a pagar pela maior automação, mas verifique se é aceitável comparado ao Spork.
+    \subsection{Análise de Corretude e Erros Silenciosos}
+    A métrica mais crítica para a adoção industrial, como destacado por \cite{schesch2024evaluation}, é a taxa de \textit{merges} incorretos — cenários onde a ferramenta reporta sucesso, mas o código resultante quebra (falha de compilação ou teste).
+
+    \begin{itemize} 
+        \item \textbf{O Risco Estruturado:} O Spork, apesar de resolver mais conflitos, introduziu erros em \textbf{11\%} dos casos (558 falhas). O IntelliMerge mostrou-se inviável para este \textit{dataset}, com uma taxa de erro de \textbf{70\%}, comportando-se como um \textit{outlier} negativo. 
+        \item \textbf{A Segurança Semi-Estruturada:} O SESAME apresentou uma taxa de erro de apenas \textbf{3\%} (174 casos), um valor muito próximo ao do Git (2\%). 
+    \end{itemize}
+
+    Isso indica que o SESAME consegue aplicar inteligência estrutural (via separadores) sem assumir os riscos de ``alucinação estrutural'' que ferramentas baseadas em AST completa (como o Spork) tendem a cometer quando a árvore sintática não pode ser perfeitamente reconciliada.
 
     \subsection{Redução de Esforço (\textit{Effort Reduction})}
-    Para ponderar o compromisso entre resolver conflitos e evitar erros, aplicou-se a fórmula de \textit{Effort Reduction} variando o fator de custo $k$ (custo de corrigir um erro incorreto em relação a resolver um conflito manual).
+    Para ponderar o compromisso entre resolver conflitos e evitar erros, a métrica de \textit{Effort Reduction} penaliza as ferramentas conforme o custo k de corrigir um erro introduzido aumenta.
+    
+    A Figura \ref{fig:effort_reduction} (baseada no arquivo \texttt{cost\_without\_manual.pdf} gerado pelo experimento) ilustra este cenário:
 
-    A Figura \ref{fig:effort_reduction} apresenta as curvas de desempenho das ferramentas.
-
-    \begin{figure}[ht]
+    \begin{figure}[H]
         \centering
-        % \includegraphics[width=0.9\textwidth]{imagens/nome_do_arquivo_gerado.pdf} 
-        \caption{Curva de Redução de Esforço (\textit{Effort Reduction}). O gráfico compara o desempenho do SESAME com as ferramentas do estudo original. Fonte: Dados da pesquisa.}
+        \includegraphics[width=0.75\textwidth]{imagens/cost_without_manual.pdf}
+        \caption{Curva de Redução de Esforço (\textit{Effort Reduction}). O eixo X representa o fator de custo k para erros incorretos. Fonte: Dados experimentais.}
         \label{fig:effort_reduction}
     \end{figure}
 
     Observa-se que:
     \begin{itemize}
-        \item Para valores baixos de $k$ ($k < [VALOR]$), onde o custo de corrigir um bug é baixo, a ferramenta \textbf{[FERRAMENTA VENCEDORA]} apresenta o melhor desempenho.
-        \item À medida que $k$ aumenta (penalizando erros silenciosos), a curva do SESAME \textbf{[DESCREVER COMPORTAMENTO: ela cai mais rápido que o Git? Ela se mantém estável?]}.
-        \item O ponto de intersecção onde o SESAME se torna mais (ou menos) vantajoso que o Git Merge ocorre em $k \approx [VALOR]$.
+        \item Para k=0 (custo de corrigir erro igual ao de resolver conflito), o Spork lidera devido à sua alta taxa de resolução bruta. 
+        \item No entanto, a curva do Spork apresenta um declínio acentuado. À medida que k aumenta (penalizando a introdução de bugs), a vantagem do Spork desaparece rapidamente devido aos seus 11\% de erros. 
+        \item A curva do SESAME mantém-se muito mais estável e próxima à do Gitmerge-ort, demonstrando que a ferramenta é "segura". Ela oferece uma alternativa conservadora que não impõe passivos técnicos ocultos ao desenvolvedor.
     \end{itemize}
 
     Esta análise sugere que o SESAME é uma alternativa viável para equipes que priorizam a redução de conflitos manuais, desde que possuam uma suíte de testes robusta para capturar os eventuais erros de integração introduzidos.
 
     \subsection{Análise de Tempo de Execução}
-    Embora não seja o foco principal da corretude, o tempo de execução é um fator prático relevante. O tempo médio de execução por cenário de \textit{merge} para o SESAME foi de \textbf{[TEMPO] segundos}, comparado a \textbf{[TEMPO] segundos} do Spork. Isso demonstra a eficiência da abordagem baseada em separadores, que evita o custo computacional da construção de árvores AST completas, conforme teorizado por \textcite{cavalcanti2024semistructured}.
+    A análise da Fase 2 (Tempo de Execução) revela o verdadeiro gargalo das abordagens puramente estruturadas. A Tabela \ref{tab:runtime} apresenta os tempos médios e máximos.
+    
+    \begin{table}[ht] 
+        \centering 
+        \caption{Tempo de execução (em segundos) por cenário de \textit{merge} (Fase 2). Fonte: Dados experimentais.} 
+        \label{tab:runtime} 
+        \begin{tabular}{|l|c|c|} 
+            \hline 
+            \textbf{Ferramenta} & \textbf{Média (s)} & \textbf{Máximo (s)} \\ \hline 
+            Gitmerge-ort & 0.11 & 0.38 \\ \hline 
+            \textbf{SESAME} & \textbf{1.61} & \textbf{5.81} \\ \hline 
+            Spork & 16.20 & 54.00 \\ \hline 
+            IntelliMerge & 24.30 & 176.00 \\ \hline 
+        \end{tabular} 
+    \end{table}
 
+    O Spork é, em média, \textbf{147 vezes mais lento} que o Git e cerca de \textbf{10 vezes mais lento} que o SESAME. Em um cenário de CI/CD com milhares de \textit{merges}, o tempo do Spork (média de 16s, pior caso 54s) pode ser proibitivo. O SESAME, com média de 1.6s, posiciona-se em um "Sweet Spot": é significativamente mais rápido que a análise de AST completa, adicionando um \textit{overhead} aceitável sobre o Git em troca de maior granularidade.
+    
+    Isso demonstra a eficiência da abordagem baseada em separadores, que evita o custo computacional da construção de árvores AST completas, conforme teorizado por \textcite{cavalcanti2024semistructured}.
+
+\FloatBarrier
 \section{Discussão}
     Nesta sessão, interpretam-se os resultados obtidos à luz das questões de pesquisa formuladas, discutindo as implicações do desempenho do SESAME frente às ferramentas de referência. Adicionalmente, abordam-se as ameaças à validade inerentes ao desenho experimental de replicação.
 
@@ -413,12 +586,32 @@ $$$$$$ }
     % (ANÁLISE: Se o SESAME teve menos erros incorretos que o Spork/IntelliMerge, destaque aqui).
     Observou-se que, ao evitar a construção de árvores AST completas e complexas, o SESAME [evitou/não evitou] certas categorias de erros semânticos comuns em ferramentas estruturadas agressivas. No entanto, a dependência de separadores sintáticos pode introduzir desafios de alinhamento textual em cenários específicos, conforme alertado pelos autores da ferramenta.
 
+    \subsection{Desafios Práticos da Execução Experimental}
+
+    A replicação do estudo de \cite{schesch2024evaluation} revelou barreiras de entrada significativas para pesquisadores que desejam avaliar novas ferramentas de \textit{merge}. Para além dos resultados numéricos, é fundamental documentar as dificuldades técnicas enfrentadas, pois elas impactam diretamente a viabilidade de adoção dessas ferramentas em fluxos de integração contínua (CI/CD) reais.
+
+    Dois obstáculos principais foram identificados durante a execução do experimento:
+
+    \subsubsection{Custo Computacional e Tempo de Execução}
+    A inclusão de ferramentas estruturadas (\textit{Spork} e \textit{IntelliMerge}) no \textit{benchmark} alterou drasticamente a escala temporal do experimento.
+
+    Enquanto a avaliação de ferramentas puramente textuais (como o Git Merge) ou semi-estruturadas leves (como o SESAME) permite o processamento de milhares de cenários em questão de minutos ou poucas horas, as ferramentas estruturadas exigem a construção completa da Árvore Sintática Abstrata (AST) para cada revisão do código (Base, Left e Right). 
+
+    Esse \textit{overhead} de processamento transformou a execução do experimento em uma tarefa de múltiplas semanas. No contexto de pesquisa, isso impactou severamente a produtividade, impedindo iterações rápidas (ciclos de \textit{feedback}) e testes de configuração. Extrapolando para a indústria, esse custo temporal sugere que o uso síncrono dessas ferramentas em esteiras de Integração Contínua (CI/CD) pode ser proibitivo para grandes repositórios sem uma estratégia robusta de cache ou paralelismo.
+
+    \subsubsection{Opacidade de Progresso e Arquitetura de Baixa Observabilidade}
+    Uma limitação crítica observada na infraestrutura de avaliação disponibilizada é a ausência de geração de resultados parciais. O \textit{framework} opera sob uma lógica monolítica: os dados brutos são processados sequencialmente, mas a consolidação das métricas (tabelas) e a geração visual (gráficos) ocorrem exclusivamente no estágio final do \textit{script}.
+
+    Essa arquitetura resulta em uma \textbf{opacidade operacional} durante o longo período de processamento. Não há \textit{checkpoints} visuais que permitam validar se a configuração está correta após as primeiras horas, fazendo com que o pesquisar perca a visibilidade sobre a integridade dos dados durante a execução. O risco inerente a este modelo é a \textbf{detecção tardia de falhas:} erros de configuração ou exceções no módulo de plotagem podem ocorrer após dias de computação, exigindo intervenções manuais complexas para recuperar os dados armazenados em cache e evitar a perda total do tempo de processamento investido.
+
+    A falta de \textit{feedback} incremental não apenas dificulta a detecção precoce de erros de configuração, mas também impõe uma barreira psicológica e técnica para a manutenção e evolução do próprio \textit{framework} de avaliação.
+
     \subsection{Ameaças à Validade}
 
     Como em qualquer estudo empírico, existem limitações que devem ser consideradas na interpretação destes resultados:
 
     \begin{itemize}
-        \item \textbf{Validade Interna:} A execução dos testes automatizados pode sofrer com o problema de testes intermitentes (*flaky tests*). Embora tenha-se adotado a estratégia de reexecução (5 vezes) proposta por \cite{schesch2024evaluation}, não é possível garantir a eliminação total de falsos negativos.
+        \item \textbf{Validade Interna:} A execução dos testes automatizados pode sofrer com o problema de testes intermitentes (\textbf{flaky tests}). Embora tenha-se adotado a estratégia de reexecução (5 vezes) proposta por \cite{schesch2024evaluation}, não é possível garantir a eliminação total de falsos negativos.
         \item \textbf{Validade Externa:} O estudo limitou-se a projetos Java que utilizam Maven/Gradle. Embora o \textit{dataset} seja representativo de projetos de alta qualidade, os resultados podem não ser generalizáveis para outras linguagens ou paradigmas de programação onde os separadores sintáticos tenham papéis diferentes.
         \item \textbf{Validade de Construto:} Utilizou-se a passagem em suítes de teste como \textit{proxy} para corretude. É possível que \textit{merges} clas\-si\-fi\-ca\-dos como "Corretos" contenham defeitos não cobertos pelos testes existentes, uma limitação in\-trín\-se\-ca a este tipo de avaliação auto\-ma\-ti\-za\-da.
     \end{itemize}
