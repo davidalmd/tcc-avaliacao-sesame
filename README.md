@@ -1,6 +1,6 @@
 # Avaliando o Merge Semi-Estruturado: um estudo comparativo de corretude e desempenho da ferramenta SESAME
 
-> **Status:** 🎓 Trabalho de Conclusão de Curso (TCC) em andamento.
+> **Status:** 🎓 Trabalho de Conclusão de Curso (TCC) concluído.
 
 Este repositório armazena o código-fonte (em LaTeX) do documento do Trabalho de Conclusão de Curso do curso de Bacharelado em Engenharia de Software do IFPE - Campus Belo Jardim.
 
